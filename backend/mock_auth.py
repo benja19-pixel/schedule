@@ -31,49 +31,20 @@ def get_or_create_mock_user(db: Session):
     
     if not user:
         # Crear usuario si no existe
-        # IMPORTANTE: Usar solo los campos que existen en tu modelo User
         user = User(
             id=str(uuid.uuid4()),
             email="demo@mediconnect.com",
             full_name="Dr. Demo",
-            # NO usar hashed_password si no existe en el modelo
-            # hashed_password="not_used_in_development",  # ELIMINADO
-            password_hash="not_used_in_development",  # Usar el nombre correcto del campo
+            hashed_password="not_used_in_development",
             plan_type="premium",
             is_active=True,
             is_verified=True,
             created_at=datetime.utcnow()
         )
         db.add(user)
-        try:
-            db.commit()
-            db.refresh(user)
-            print(f"✅ Usuario de prueba creado: {user.email} (ID: {user.id})")
-        except Exception as e:
-            db.rollback()
-            # Si falla la creación, intentar con menos campos
-            print(f"⚠️  Error creando usuario con todos los campos: {e}")
-            print("Intentando crear usuario con campos mínimos...")
-            
-            # Crear usuario con campos mínimos
-            user = User(
-                email="demo@mediconnect.com",
-                full_name="Dr. Demo"
-            )
-            # Establecer otros campos manualmente si existen
-            if hasattr(user, 'password_hash'):
-                user.password_hash = "not_used"
-            if hasattr(user, 'plan_type'):
-                user.plan_type = "premium"
-            if hasattr(user, 'is_active'):
-                user.is_active = True
-            if hasattr(user, 'is_verified'):
-                user.is_verified = True
-                
-            db.add(user)
-            db.commit()
-            db.refresh(user)
-            print(f"✅ Usuario de prueba creado (mínimo): {user.email} (ID: {user.id})")
+        db.commit()
+        db.refresh(user)
+        print(f"✅ Usuario de prueba creado: {user.email} (ID: {user.id})")
     else:
         print(f"✅ Usuario de prueba encontrado: {user.email} (ID: {user.id})")
     
@@ -139,15 +110,6 @@ def setup_mock_auth_globally():
         # Si ya existe, reemplazar get_current_user
         sys.modules['api.auth'].get_current_user = get_current_user
         print("✅ api.auth.get_current_user reemplazado")
-    
-    # También reemplazar en el módulo real si está cargado
-    try:
-        from api import auth as real_auth
-        if hasattr(real_auth, 'get_current_user'):
-            real_auth.get_current_user = get_current_user
-            print("✅ api.auth real reemplazado")
-    except ImportError:
-        pass
     
     return True
 
