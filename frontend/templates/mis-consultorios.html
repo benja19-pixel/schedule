@@ -10,18 +10,183 @@
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Mock Auth para desarrollo -->
+    <script src="/static/js/mock-auth.js"></script>
     
     <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Custom Styles -->
     <link rel="stylesheet" href="/static/css/consultorios.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-feature-settings: 'cv11', 'ss01', 'ss03';
+        }
+        
+        body {
+            font-weight: 400;
+            letter-spacing: -0.011em;
+            line-height: 1.5;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+            letter-spacing: -0.022em;
+            line-height: 1.2;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Gradient orbs */
+        .gradient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.2;
+            animation: float-slow 20s infinite ease-in-out;
+            pointer-events: none;
+        }
+        
+        @keyframes float-slow {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        
+        /* Sidebar glass effect */
+        .sidebar-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(229, 231, 235, 0.5);
+        }
+        
+        /* Nav link styles */
+        .nav-link {
+            position: relative;
+            transition: all 0.2s ease;
+            color: #6b7280;
+            font-weight: 500;
+            text-decoration: none;
+            display: block;
+            padding: 0.625rem 0;
+            margin: 0;
+        }
+        
+        .nav-link:hover {
+            color: #111827;
+        }
+        
+        .nav-link.active {
+            color: #ec4899;
+            font-weight: 600;
+        }
+        
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+            border-radius: 0 4px 4px 0;
+        }
+        
+        /* Status dot */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+        }
+        
+        /* Loading overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        #loading-overlay.hidden {
+            display: none !important;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #9333ea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-message {
+            margin-top: 20px;
+            color: #6b7280;
+            font-weight: 500;
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .sidebar-glass {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 40;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+            }
+            
+            .sidebar-glass.open {
+                transform: translateX(0);
+            }
+            
+            main {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 text-gray-900">
+<body class="bg-white text-gray-900">
     <!-- Background decoration -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div class="gradient-orb w-96 h-96 bg-blue-400 -top-48 -right-48"></div>
-        <div class="gradient-orb w-80 h-80 bg-purple-400 -bottom-32 -left-32"></div>
+        <div class="gradient-orb w-96 h-96 bg-purple-400 -top-48 -right-48"></div>
+        <div class="gradient-orb w-80 h-80 bg-pink-400 -bottom-32 -left-32" style="animation-delay: -5s;"></div>
+        <div class="gradient-orb w-64 h-64 bg-indigo-400 top-1/2 left-1/3" style="animation-delay: -10s;"></div>
     </div>
     
     <!-- Loading Overlay -->
@@ -51,21 +216,30 @@
                 
                 <!-- User section -->
                 <div class="p-6 pt-0 mt-auto border-t border-gray-200">
-                    <a href="/account" class="user-profile-link">
+                    <a href="/account" class="user-profile-link flex items-center gap-3 px-3 py-3 mx-3 rounded-xl hover:bg-purple-50 transition-all cursor-pointer group border border-transparent hover:border-purple-200">
                         <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=40&h=40&fit=crop&crop=faces" 
                              alt="Doctor" 
-                             class="w-10 h-10 rounded-full">
+                             class="w-10 h-10 rounded-full ring-2 ring-gray-200 group-hover:ring-purple-300 transition-all">
                         <div class="flex-1">
-                            <p class="text-sm font-semibold text-gray-900">Dr. García</p>
-                            <span class="text-xs text-gray-500">Mi cuenta</span>
+                            <p class="text-sm font-semibold text-gray-900 group-hover:text-purple-600 transition-colors" id="doctor-name">Dr. García</p>
+                            <div class="flex items-center gap-2">
+                                <span class="status-dot"></span>
+                                <span class="text-xs text-gray-500 group-hover:text-purple-600 transition-colors">Mi cuenta</span>
+                            </div>
                         </div>
+                        <i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-purple-600 transition-all"></i>
                     </a>
                 </div>
             </div>
         </aside>
         
+        <!-- Mobile menu toggle -->
+        <button class="md:hidden fixed bottom-4 right-4 z-30 bg-gradient-to-br from-purple-500 to-pink-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+        
         <!-- Main content -->
-        <main class="flex-1 overflow-y-auto">
+        <main class="flex-1 overflow-y-auto bg-gray-50">
             <div class="max-w-7xl mx-auto px-8 py-12">
                 <!-- Header -->
                 <header class="mb-10">
@@ -357,6 +531,14 @@
             </div>
         </div>
     </div>
+    
+    <!-- Toggle Sidebar Script -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+    </script>
     
     <!-- Google Maps Script -->
     <script>

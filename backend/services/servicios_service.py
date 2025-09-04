@@ -3,6 +3,7 @@ from typing import List, Dict, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from models.servicios import ServicioMedico, TipoPrecio
+from models.consultorio import Consultorio
 from models.user import User
 
 class ServiciosService:
@@ -50,15 +51,14 @@ class ServiciosService:
                 "descripcion": servicio.descripcion,
                 "duracion_minutos": servicio.duracion_minutos,
                 "precio": servicio.precio_display,
-                "instrucciones_ia": servicio.instrucciones_ia or "Sin instrucciones específicas"
+                "instrucciones_ia": servicio.instrucciones_ia or "Sin instrucciones específicas",
+                "consultorio": servicio.consultorio.nombre if servicio.consultorio else "Consultorio principal",
+                "doctores": servicio.doctores_display if servicio.doctores_atienden else "Doctor principal"
             }
             
             # Agregar contexto adicional para la IA
             if servicio.cantidad_consultas > 1:
                 ai_data["nota_importante"] = f"Este servicio requiere {servicio.cantidad_consultas} consultas"
-            
-            if servicio.requiere_preparacion:
-                ai_data["preparacion"] = f"Requiere {servicio.tiempo_preparacion} minutos de preparación"
             
             ai_servicios.append(ai_data)
         
@@ -77,21 +77,28 @@ class ServiciosService:
                 "servicio_mas_corto": None,
                 "servicio_mas_largo": None,
                 "tipos_precio": {},
-                "requieren_preparacion": 0
+                "consultorios_usados": 0,
+                "total_doctores": 0
             }
         
         duraciones = [s.duracion_minutos for s in servicios]
         tipos_precio = {}
-        requieren_prep = 0
+        consultorios_set = set()
+        doctores_set = set()
         
         for servicio in servicios:
             # Contar tipos de precio
             tipo = servicio.tipo_precio.value
             tipos_precio[tipo] = tipos_precio.get(tipo, 0) + 1
             
-            # Contar los que requieren preparación
-            if servicio.requiere_preparacion:
-                requieren_prep += 1
+            # Contar consultorios únicos
+            if servicio.consultorio_id:
+                consultorios_set.add(servicio.consultorio_id)
+            
+            # Contar doctores únicos
+            if servicio.doctores_atienden:
+                for doctor in servicio.doctores_atienden:
+                    doctores_set.add(doctor)
         
         # Encontrar servicio más corto y más largo
         servicio_corto = min(servicios, key=lambda s: s.duracion_minutos)
@@ -109,8 +116,19 @@ class ServiciosService:
                 "duracion": servicio_largo.duracion_display
             },
             "tipos_precio": tipos_precio,
-            "requieren_preparacion": requieren_prep
+            "consultorios_usados": len(consultorios_set),
+            "total_doctores": len(doctores_set)
         }
+    
+    def get_servicios_by_consultorio(self, user_id: str, consultorio_id: str) -> List[ServicioMedico]:
+        """
+        Obtener servicios ofrecidos en un consultorio específico
+        """
+        return self.db.query(ServicioMedico).filter(
+            ServicioMedico.user_id == user_id,
+            ServicioMedico.consultorio_id == consultorio_id,
+            ServicioMedico.is_active == True
+        ).order_by(ServicioMedico.display_order).all()
     
     def validate_servicio_name_unique(self, user_id: str, nombre: str, exclude_id: Optional[str] = None) -> bool:
         """
@@ -134,13 +152,8 @@ class ServiciosService:
         if servicio.duracion_minutos == 0:
             return 0
         
-        # Considerar el tiempo de preparación si es necesario
-        tiempo_total = servicio.duracion_minutos
-        if servicio.requiere_preparacion:
-            tiempo_total += servicio.tiempo_preparacion
-        
         # Considerar la cantidad de consultas
-        tiempo_total *= servicio.cantidad_consultas
+        tiempo_total = servicio.duracion_minutos * servicio.cantidad_consultas
         
         return available_minutes // tiempo_total
     
@@ -208,7 +221,9 @@ class ServiciosService:
                             "servicio_id": str(servicio.id),
                             "nombre": servicio.nombre,
                             "razon": f"Coincide con criterio: {keyword}",
-                            "confianza": 70  # Porcentaje de confianza
+                            "confianza": 70,  # Porcentaje de confianza
+                            "consultorio": servicio.consultorio.nombre if servicio.consultorio else "Consultorio principal",
+                            "doctores": servicio.doctores_display
                         }
         
         # Si no hay coincidencia, sugerir el servicio más común (primer servicio)
@@ -217,7 +232,38 @@ class ServiciosService:
                 "servicio_id": str(servicios[0].id),
                 "nombre": servicios[0].nombre,
                 "razon": "Servicio por defecto",
-                "confianza": 30
+                "confianza": 30,
+                "consultorio": servicios[0].consultorio.nombre if servicios[0].consultorio else "Consultorio principal",
+                "doctores": servicios[0].doctores_display
             }
         
         return None
+    
+    def assign_principal_consultorio_to_services(self, user_id: str) -> int:
+        """
+        Asignar consultorio principal a todos los servicios sin consultorio
+        Útil para migración
+        """
+        # Obtener consultorio principal
+        consultorio_principal = self.db.query(Consultorio).filter(
+            Consultorio.user_id == user_id,
+            Consultorio.es_principal == True,
+            Consultorio.activo == True
+        ).first()
+        
+        if not consultorio_principal:
+            return 0
+        
+        # Actualizar servicios sin consultorio
+        updated_count = self.db.query(ServicioMedico).filter(
+            ServicioMedico.user_id == user_id,
+            ServicioMedico.consultorio_id == None,
+            ServicioMedico.is_active == True
+        ).update({
+            "consultorio_id": consultorio_principal.id,
+            "updated_at": datetime.utcnow()
+        })
+        
+        self.db.commit()
+        
+        return updated_count

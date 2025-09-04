@@ -540,6 +540,32 @@ class HorariosService:
         
         return horario.get("consultorio")
     
+    def assign_default_consultorio_to_exceptions(self, user_id: str) -> int:
+        """
+        NEW: Assign principal consultorio to exceptions that don't have one
+        This is a helper method for data migration
+        """
+        principal = Consultorio.get_principal_for_user(self.db, user_id)
+        if not principal:
+            return 0
+        
+        # Find all working day exceptions without consultorio
+        exceptions = self.db.query(HorarioException).filter(
+            HorarioException.user_id == user_id,
+            HorarioException.is_working_day == True,
+            HorarioException.consultorio_id == None
+        ).all()
+        
+        updated_count = 0
+        for exception in exceptions:
+            exception.consultorio_id = principal.id
+            updated_count += 1
+        
+        if updated_count > 0:
+            self.db.commit()
+        
+        return updated_count
+    
     # Métodos auxiliares privados
     def _time_to_str(self, time_obj) -> str:
         """Convertir objeto time a string HH:MM"""

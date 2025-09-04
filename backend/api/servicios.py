@@ -8,6 +8,7 @@ import uuid
 from database.connection import get_db
 from models.user import User
 from models.servicios import ServicioMedico, TipoPrecio, get_color_for_service, validate_service_duration
+from models.consultorio import Consultorio
 from api.auth import get_current_user
 from services.servicios_service import ServiciosService
 from services.capacidad_service import CapacidadService
@@ -26,8 +27,8 @@ class ServicioMedicoRequest(BaseModel):
     precio_maximo: Optional[int] = None
     instrucciones_ia: Optional[str] = None
     instrucciones_paciente: Optional[str] = None
-    requiere_preparacion: bool = False
-    tiempo_preparacion: int = 0
+    consultorio_id: Optional[str] = None  # ID del consultorio donde se ofrece
+    doctores_atienden: Optional[List[str]] = None  # Lista de nombres de doctores
     
     @validator('tipo_precio')
     def validate_tipo_precio(cls, v):
@@ -44,6 +45,13 @@ class ServicioMedicoRequest(BaseModel):
             if values['tipo_precio'] in ['gratis', 'precio_por_evaluar'] and v is not None:
                 return None  # Ignorar precio para estos tipos
         return v
+    
+    @validator('doctores_atienden')
+    def validate_doctores(cls, v):
+        if v:
+            # Filter out empty strings and strip whitespace
+            return [doc.strip() for doc in v if doc.strip()]
+        return []
 
 class ServicioMedicoUpdateRequest(BaseModel):
     nombre: Optional[str] = Field(None, min_length=1, max_length=100)
@@ -56,10 +64,17 @@ class ServicioMedicoUpdateRequest(BaseModel):
     precio_maximo: Optional[int] = None
     instrucciones_ia: Optional[str] = None
     instrucciones_paciente: Optional[str] = None
-    requiere_preparacion: Optional[bool] = None
-    tiempo_preparacion: Optional[int] = None
+    consultorio_id: Optional[str] = None
+    doctores_atienden: Optional[List[str]] = None
     is_active: Optional[bool] = None
     display_order: Optional[int] = None
+    
+    @validator('doctores_atienden')
+    def validate_doctores(cls, v):
+        if v:
+            # Filter out empty strings and strip whitespace
+            return [doc.strip() for doc in v if doc.strip()]
+        return v
 
 
 # Servicios Endpoints
@@ -76,6 +91,13 @@ async def get_servicios(
     
     # Si no hay servicios, crear uno por defecto
     if not servicios:
+        # Obtener consultorio principal
+        consultorio_principal = db.query(Consultorio).filter(
+            Consultorio.user_id == current_user.id,
+            Consultorio.es_principal == True,
+            Consultorio.activo == True
+        ).first()
+        
         servicio_default = ServicioMedico(
             user_id=current_user.id,
             nombre="Consulta inicial",
@@ -85,36 +107,16 @@ async def get_servicios(
             tipo_precio=TipoPrecio.PRECIO_POR_EVALUAR,
             color="#9333ea",
             display_order=0,
-            instrucciones_ia="Agendar para pacientes nuevos o que no han venido en más de 6 meses"
+            instrucciones_ia="Agendar para pacientes nuevos o que no han venido en más de 6 meses",
+            consultorio_id=consultorio_principal.id if consultorio_principal else None,
+            doctores_atienden=[]
         )
         db.add(servicio_default)
         servicios.append(servicio_default)
         db.commit()
     
     return {
-        "servicios": [
-            {
-                "id": str(servicio.id),
-                "nombre": servicio.nombre,
-                "descripcion": servicio.descripcion,
-                "duracion_minutos": servicio.duracion_minutos,
-                "duracion_display": servicio.duracion_display,
-                "cantidad_consultas": servicio.cantidad_consultas,
-                "consultas_display": servicio.consultas_display,
-                "tipo_precio": servicio.tipo_precio.value,
-                "precio": servicio.precio,
-                "precio_minimo": servicio.precio_minimo,
-                "precio_maximo": servicio.precio_maximo,
-                "precio_display": servicio.precio_display,
-                "instrucciones_ia": servicio.instrucciones_ia,
-                "instrucciones_paciente": servicio.instrucciones_paciente,
-                "color": servicio.color,
-                "requiere_preparacion": servicio.requiere_preparacion,
-                "tiempo_preparacion": servicio.tiempo_preparacion,
-                "display_order": servicio.display_order
-            }
-            for servicio in servicios
-        ]
+        "servicios": [servicio.to_dict() for servicio in servicios]
     }
 
 
@@ -132,6 +134,31 @@ async def create_servicio(
             status_code=400,
             detail="La duración debe estar entre 15 minutos y 3 horas"
         )
+    
+    # Si no se especifica consultorio, usar el principal
+    consultorio_id = request.consultorio_id
+    if not consultorio_id:
+        consultorio_principal = db.query(Consultorio).filter(
+            Consultorio.user_id == current_user.id,
+            Consultorio.es_principal == True,
+            Consultorio.activo == True
+        ).first()
+        
+        if consultorio_principal:
+            consultorio_id = str(consultorio_principal.id)
+    else:
+        # Validar que el consultorio pertenece al usuario
+        consultorio = db.query(Consultorio).filter(
+            Consultorio.id == consultorio_id,
+            Consultorio.user_id == current_user.id,
+            Consultorio.activo == True
+        ).first()
+        
+        if not consultorio:
+            raise HTTPException(
+                status_code=404,
+                detail="Consultorio no encontrado o no pertenece al usuario"
+            )
     
     # Obtener el máximo display_order actual
     max_order = db.query(func.max(ServicioMedico.display_order)).filter(
@@ -159,8 +186,8 @@ async def create_servicio(
         precio_maximo=request.precio_maximo if tipo_precio_enum == TipoPrecio.PRECIO_VARIABLE else None,
         instrucciones_ia=request.instrucciones_ia,
         instrucciones_paciente=request.instrucciones_paciente,
-        requiere_preparacion=request.requiere_preparacion,
-        tiempo_preparacion=request.tiempo_preparacion,
+        consultorio_id=consultorio_id,
+        doctores_atienden=request.doctores_atienden or [],
         color=get_color_for_service(servicios_count),
         display_order=max_order + 1
     )
@@ -171,13 +198,7 @@ async def create_servicio(
     
     return {
         "message": "Servicio creado exitosamente",
-        "servicio": {
-            "id": str(servicio.id),
-            "nombre": servicio.nombre,
-            "duracion_display": servicio.duracion_display,
-            "precio_display": servicio.precio_display,
-            "color": servicio.color
-        }
+        "servicio": servicio.to_dict()
     }
 
 
@@ -200,6 +221,20 @@ async def update_servicio(
     # Actualizar solo campos proporcionados
     update_data = request.dict(exclude_unset=True)
     
+    # Validar consultorio si se proporciona
+    if 'consultorio_id' in update_data and update_data['consultorio_id']:
+        consultorio = db.query(Consultorio).filter(
+            Consultorio.id == update_data['consultorio_id'],
+            Consultorio.user_id == current_user.id,
+            Consultorio.activo == True
+        ).first()
+        
+        if not consultorio:
+            raise HTTPException(
+                status_code=404,
+                detail="Consultorio no encontrado o no pertenece al usuario"
+            )
+    
     # Manejar tipo_precio si se proporciona
     if 'tipo_precio' in update_data:
         update_data['tipo_precio'] = TipoPrecio[update_data['tipo_precio'].upper()]
@@ -221,12 +256,7 @@ async def update_servicio(
     
     return {
         "message": "Servicio actualizado",
-        "servicio": {
-            "id": str(servicio.id),
-            "nombre": servicio.nombre,
-            "duracion_display": servicio.duracion_display,
-            "precio_display": servicio.precio_display
-        }
+        "servicio": servicio.to_dict()
     }
 
 
@@ -311,3 +341,31 @@ async def get_capacidad_con_servicios(
     capacidad = service.calcular_capacidad_semanal(current_user.id)
     
     return capacidad
+
+
+# Get consultorios for service configuration
+@router.get("/consultorios")
+async def get_consultorios_for_services(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obtener consultorios activos para configurar servicios"""
+    consultorios = db.query(Consultorio).filter(
+        Consultorio.user_id == current_user.id,
+        Consultorio.activo == True
+    ).order_by(
+        Consultorio.es_principal.desc(),
+        Consultorio.nombre
+    ).all()
+    
+    return {
+        "consultorios": [
+            {
+                "id": str(c.id),
+                "nombre": c.nombre,
+                "es_principal": c.es_principal,
+                "direccion_corta": f"{c.calle} {c.numero}, {c.ciudad}",
+                "foto": c.foto_principal
+            } for c in consultorios
+        ]
+    }

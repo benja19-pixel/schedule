@@ -1,6 +1,7 @@
 // Horarios.js - JavaScript completo para configuración de horarios con sincronización de calendario
 // Versión mejorada con agrupación de eventos recurrentes, sincronización automática y SELECTOR DE CONSULTORIOS
 // FIXED: No duplicar consultorio principal en selector
+// FIXED: Eliminación de eventos especiales y asignación automática de consultorio principal
 
 // ==================== GLOBAL STATE ====================
 let horarioTemplates = {};
@@ -296,12 +297,13 @@ function renderExceptionConsultorioSelector() {
     const selectorGrid = document.createElement('div');
     selectorGrid.className = 'consultorio-selector-grid exception-selector';
     
-    // FIXED: Don't create "Usar principal" option - just show all consultorios directly
+    // FIXED: Auto-select principal consultorio if none selected
+    const currentSelection = selectedConsultorioForException || principalConsultorioId;
+    
     // Add all available consultorios
     availableConsultorios.forEach(consultorio => {
         const item = document.createElement('div');
-        const isSelected = consultorio.id === selectedConsultorioForException ||
-                          (availableConsultorios.length === 1 && !selectedConsultorioForException);
+        const isSelected = consultorio.id === currentSelection;
         item.className = `consultorio-selector-item ${isSelected ? 'selected' : ''}`;
         item.dataset.consultorioId = consultorio.id;
         
@@ -340,9 +342,9 @@ function renderExceptionConsultorioSelector() {
     
     container.appendChild(selectorGrid);
     
-    // Auto-select if only one consultorio
-    if (availableConsultorios.length === 1) {
-        selectConsultorioForException(availableConsultorios[0].id);
+    // FIXED: Auto-select principal if exists and no selection made
+    if (principalConsultorioId && !selectedConsultorioForException) {
+        selectConsultorioForException(principalConsultorioId);
     }
 }
 
@@ -1241,6 +1243,8 @@ function toggleExceptionFields() {
         if (breaksContainer) breaksContainer.classList.remove('hidden');
         if (consultorioSelectorContainer) {
             consultorioSelectorContainer.classList.remove('hidden');
+            // FIXED: Auto-select principal consultorio when showing fields
+            selectedConsultorioForException = principalConsultorioId;
             renderExceptionConsultorioSelector();
         }
         currentExceptionBreaks = [];
@@ -1254,8 +1258,10 @@ function toggleExceptionFields() {
         selectedDateForException = null;
     }
     
-    // Reset consultorio selection
-    selectedConsultorioForException = null;
+    // Reset consultorio selection when changing type
+    if (type !== 'special-hours' && type !== 'special-open') {
+        selectedConsultorioForException = null;
+    }
 }
 
 async function addException() {
@@ -1309,7 +1315,8 @@ async function addException() {
         
         exceptionData.opens_at = opensAt;
         exceptionData.closes_at = closesAt;
-        exceptionData.consultorio_id = selectedConsultorioForException;
+        // FIXED: Use selected consultorio, or principal if none selected
+        exceptionData.consultorio_id = selectedConsultorioForException || principalConsultorioId;
         
         if (currentExceptionBreaks.length > 0) {
             const timeBlocks = [];
@@ -1356,10 +1363,8 @@ async function addException() {
             body: JSON.stringify(exceptionData)
         });
         
-        horarioExceptions.push({
-            ...exceptionData,
-            id: response.exception_id
-        });
+        // Reload exceptions to get updated list with proper IDs
+        await loadHorarioData();
         
         updateExceptionsList();
         renderCalendar(currentCalendarMonth, currentCalendarYear);
@@ -1477,6 +1482,14 @@ function updateExceptionsList() {
                     </div>
                 `;
             }
+        } else if (exception.consultorio) {
+            // Also check the consultorio object from backend
+            consultorioHtml = `
+                <div class="flex items-center gap-2 mt-2">
+                    <i class="fas fa-map-marker-alt text-purple-400 text-xs"></i>
+                    <span class="text-xs text-purple-600">${exception.consultorio.nombre}</span>
+                </div>
+            `;
         }
         
         if (!exception.is_working_day) {
@@ -1517,6 +1530,7 @@ function updateExceptionsList() {
             }
         }
         
+        // FIXED: Ensure exception.id is used correctly
         card.innerHTML = `
             <div class="flex items-start justify-between">
                 <div>
@@ -2939,28 +2953,32 @@ async function confirmDelete() {
     showLoading();
     
     try {
-        // Verificar si es un grupo de vacaciones (UUID format)
-        const isVacationGroup = pendingDeleteId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        // FIXED: Handle both vacation groups and individual exceptions properly
+        console.log('Deleting exception with ID:', pendingDeleteId);
         
-        if (isVacationGroup) {
-            // Es un grupo de vacaciones, eliminar todas las excepciones del grupo
-            const vacationExceptions = horarioExceptions.filter(exc => 
-                exc.vacation_group_id === pendingDeleteId
-            );
+        // Check if it's a vacation group (by looking for exceptions with this vacation_group_id)
+        const vacationExceptions = horarioExceptions.filter(exc => 
+            exc.vacation_group_id === pendingDeleteId
+        );
+        
+        if (vacationExceptions.length > 0) {
+            // It's a vacation group, delete all exceptions in the group
+            console.log('Deleting vacation group with', vacationExceptions.length, 'exceptions');
             
-            // Eliminar cada excepción del grupo
             for (const exc of vacationExceptions) {
                 await api.makeRequest(`/horarios/exceptions/${exc.id}`, {
                     method: 'DELETE'
                 });
             }
             
-            // Actualizar el array local
+            // Update local array
             horarioExceptions = horarioExceptions.filter(exc => 
                 exc.vacation_group_id !== pendingDeleteId
             );
         } else {
-            // Es una excepción individual
+            // It's a single exception, delete it directly
+            console.log('Deleting single exception');
+            
             await api.makeRequest(`/horarios/exceptions/${pendingDeleteId}`, {
                 method: 'DELETE'
             });

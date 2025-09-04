@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, Boolean, Integer, ForeignKey, Text, Enum
+from sqlalchemy import Column, String, DateTime, Boolean, Integer, ForeignKey, Text, Enum, JSON
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
@@ -21,6 +21,9 @@ class ServicioMedico(Base):
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    
+    # Consultorio donde se ofrece el servicio
+    consultorio_id = Column(UUID(as_uuid=True), ForeignKey("consultorios.id"), nullable=True)
     
     # Información básica del servicio
     nombre = Column(String(100), nullable=False)
@@ -47,9 +50,9 @@ class ServicioMedico(Base):
     # Estado
     is_active = Column(Boolean, default=True)
     
-    # Configuración adicional
-    requiere_preparacion = Column(Boolean, default=False)
-    tiempo_preparacion = Column(Integer, default=0)  # minutos antes
+    # Doctores que atienden este servicio (lista de nombres)
+    doctores_atienden = Column(JSON, nullable=True, default=list)
+    # Format: ["Dr. Juan Pérez", "Dra. María García"]
     
     # Instrucciones para el paciente (se envían al confirmar cita)
     instrucciones_paciente = Column(Text, nullable=True)
@@ -60,6 +63,7 @@ class ServicioMedico(Base):
     
     # Relationships
     user = relationship("User", backref="servicios_medicos")
+    consultorio = relationship("Consultorio", backref="servicios_ofrecidos")
     
     @property
     def precio_display(self):
@@ -96,6 +100,46 @@ class ServicioMedico(Base):
             return "1 consulta"
         else:
             return f"{self.cantidad_consultas} consultas"
+    
+    @property
+    def doctores_display(self):
+        """Retorna los doctores formateados"""
+        if not self.doctores_atienden or len(self.doctores_atienden) == 0:
+            return "No especificado"
+        elif len(self.doctores_atienden) == 1:
+            return self.doctores_atienden[0]
+        elif len(self.doctores_atienden) == 2:
+            return f"{self.doctores_atienden[0]} y {self.doctores_atienden[1]}"
+        else:
+            return f"{', '.join(self.doctores_atienden[:-1])} y {self.doctores_atienden[-1]}"
+    
+    def to_dict(self):
+        """Convert to dictionary for API responses"""
+        return {
+            "id": str(self.id),
+            "nombre": self.nombre,
+            "descripcion": self.descripcion,
+            "duracion_minutos": self.duracion_minutos,
+            "duracion_display": self.duracion_display,
+            "cantidad_consultas": self.cantidad_consultas,
+            "consultas_display": self.consultas_display,
+            "tipo_precio": self.tipo_precio.value,
+            "precio": self.precio,
+            "precio_minimo": self.precio_minimo,
+            "precio_maximo": self.precio_maximo,
+            "precio_display": self.precio_display,
+            "instrucciones_ia": self.instrucciones_ia,
+            "instrucciones_paciente": self.instrucciones_paciente,
+            "color": self.color,
+            "display_order": self.display_order,
+            "consultorio_id": str(self.consultorio_id) if self.consultorio_id else None,
+            "consultorio": self.consultorio.to_dict() if self.consultorio else None,
+            "doctores_atienden": self.doctores_atienden or [],
+            "doctores_display": self.doctores_display,
+            "is_active": self.is_active,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
 
 
 # Helper functions

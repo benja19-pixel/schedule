@@ -2,6 +2,8 @@
 
 // Global state
 let serviciosMedicos = [];
+let consultorios = [];
+let selectedDoctors = [];
 let hasUnsavedChanges = false;
 let saveTimeout = null;
 
@@ -17,6 +19,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Load initial data
     await loadServiciosData();
+    await loadConsultorios();
     
     // Initialize UI
     initializeUI();
@@ -46,6 +49,20 @@ async function loadServiciosData() {
         showToast('Error al cargar los servicios', 'error');
     } finally {
         hideLoading();
+    }
+}
+
+// Load consultorios for selection
+async function loadConsultorios() {
+    try {
+        const response = await api.makeRequest('/servicios/consultorios');
+        if (response && response.consultorios) {
+            consultorios = response.consultorios;
+            console.log('Consultorios loaded:', consultorios);
+        }
+    } catch (error) {
+        console.error('Error loading consultorios:', error);
+        consultorios = [];
     }
 }
 
@@ -93,6 +110,21 @@ function updateStatisticsDisplay(stats) {
             breakdownHtml += `<div class="flex justify-between text-sm">
                 <span>Precio variable:</span>
                 <span class="font-medium">${stats.tipos_precio.precio_variable} servicios</span>
+            </div>`;
+        }
+        
+        // Add consultorios and doctors stats
+        if (stats.consultorios_usados > 0) {
+            breakdownHtml += `<div class="flex justify-between text-sm mt-3 pt-3 border-t">
+                <span>Consultorios:</span>
+                <span class="font-medium">${stats.consultorios_usados}</span>
+            </div>`;
+        }
+        
+        if (stats.total_doctores > 0) {
+            breakdownHtml += `<div class="flex justify-between text-sm">
+                <span>Doctores:</span>
+                <span class="font-medium">${stats.total_doctores}</span>
             </div>`;
         }
         
@@ -165,6 +197,42 @@ function createServicioCard(servicio, index) {
     // AI instructions indicator
     const hasAIInstructions = servicio.instrucciones_ia && servicio.instrucciones_ia.length > 0;
     
+    // Consultorio display
+    let consultorioInfo = '';
+    if (servicio.consultorio) {
+        const consultorioLabel = servicio.consultorio.es_principal ? 
+            `${servicio.consultorio.nombre} <span class="text-xs text-amber-600">(Principal)</span>` : 
+            servicio.consultorio.nombre;
+        
+        consultorioInfo = `
+        <div class="servicio-location">
+            <div class="text-xs font-semibold text-emerald-700 mb-1">
+                <i class="fas fa-hospital mr-1"></i>
+                Consultorio:
+            </div>
+            <div class="text-xs text-emerald-600">
+                ${consultorioLabel}
+            </div>
+        </div>
+        `;
+    }
+    
+    // Doctors display
+    let doctorsInfo = '';
+    if (servicio.doctores_atienden && servicio.doctores_atienden.length > 0) {
+        doctorsInfo = `
+        <div class="servicio-doctors">
+            <div class="text-xs font-semibold text-amber-700 mb-1">
+                <i class="fas fa-user-md mr-1"></i>
+                Doctores que atienden:
+            </div>
+            <div class="text-xs text-amber-600">
+                ${servicio.doctores_display}
+            </div>
+        </div>
+        `;
+    }
+    
     card.innerHTML = `
         <div class="servicio-header">
             <div class="flex items-start justify-between">
@@ -209,6 +277,9 @@ function createServicioCard(servicio, index) {
         <div class="servicio-description">
             ${servicio.descripcion}
         </div>
+        
+        ${consultorioInfo}
+        ${doctorsInfo}
         
         ${servicio.instrucciones_ia ? `
         <div class="servicio-ai-instructions">
@@ -260,6 +331,9 @@ function openServicioModal(servicio = null) {
     const modalTitle = modal.querySelector('h3');
     modalTitle.textContent = isEdit ? 'Editar Servicio Médico' : 'Nuevo Servicio Médico';
     
+    // Reset doctors list
+    selectedDoctors = servicio?.doctores_atienden || [];
+    
     // Set form values
     modal.querySelector('[name="nombre"]').value = servicio?.nombre || '';
     modal.querySelector('[name="descripcion"]').value = servicio?.descripcion || '';
@@ -281,13 +355,14 @@ function openServicioModal(servicio = null) {
     modal.querySelector('[name="instrucciones_ia"]').value = servicio?.instrucciones_ia || '';
     modal.querySelector('[name="instrucciones_paciente"]').value = servicio?.instrucciones_paciente || '';
     
-    // Set preparation fields
-    const requiresPrep = servicio?.requiere_preparacion || false;
-    modal.querySelector('[name="requiere_preparacion"]').checked = requiresPrep;
-    modal.querySelector('[name="tiempo_preparacion"]').value = servicio?.tiempo_preparacion || 0;
-    
     // Store servicio ID for editing
     modal.dataset.servicioId = servicio?.id || '';
+    
+    // Load consultorios selector
+    loadConsultoriosSelector(servicio?.consultorio_id);
+    
+    // Display doctor tags
+    displayDoctorTags();
     
     // Update price fields visibility
     updatePriceFields();
@@ -295,6 +370,138 @@ function openServicioModal(servicio = null) {
     // Show modal
     modal.classList.add('show');
     document.body.style.overflow = 'hidden';
+}
+
+// Load consultorios selector
+function loadConsultoriosSelector(selectedConsultorioId = null) {
+    const selector = document.getElementById('consultorio-selector');
+    const alertDiv = document.getElementById('no-consultorio-alert');
+    
+    if (!selector) return;
+    
+    // Clear existing content
+    selector.innerHTML = '';
+    
+    // Check if there are consultorios
+    if (!consultorios || consultorios.length === 0) {
+        // Show alert
+        if (alertDiv) {
+            alertDiv.classList.remove('hidden');
+        }
+        selector.style.display = 'none';
+        return;
+    }
+    
+    // Hide alert
+    if (alertDiv) {
+        alertDiv.classList.add('hidden');
+    }
+    selector.style.display = '';
+    
+    // Find the principal consultorio
+    const principalConsultorio = consultorios.find(c => c.es_principal);
+    
+    // If no consultorio is selected and there's a principal, select it
+    if (!selectedConsultorioId && principalConsultorio) {
+        selectedConsultorioId = principalConsultorio.id;
+    }
+    
+    // Create consultorio options
+    consultorios.forEach(consultorio => {
+        const option = document.createElement('div');
+        option.className = 'consultorio-option';
+        
+        // Determine if this should be selected
+        const isSelected = consultorio.id === selectedConsultorioId;
+        
+        // Create the photo/icon display
+        let photoHtml = '';
+        if (consultorio.foto && consultorio.foto.url) {
+            photoHtml = `<img src="${consultorio.foto.url}" alt="${consultorio.nombre}" class="consultorio-option-image">`;
+        } else if (consultorio.foto && consultorio.foto.color) {
+            photoHtml = `<div class="consultorio-option-image" style="background: ${consultorio.foto.color};">
+                <i class="fas fa-hospital text-white"></i>
+            </div>`;
+        } else {
+            photoHtml = `<div class="consultorio-option-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <i class="fas fa-hospital text-white"></i>
+            </div>`;
+        }
+        
+        option.innerHTML = `
+            <input type="radio" 
+                   name="consultorio_id" 
+                   value="${consultorio.id}" 
+                   id="consultorio-${consultorio.id}"
+                   ${isSelected ? 'checked' : ''}>
+            <label for="consultorio-${consultorio.id}" class="consultorio-option-label">
+                ${photoHtml}
+                <div class="consultorio-option-name">${consultorio.nombre}</div>
+            </label>
+            ${consultorio.es_principal ? '<span class="consultorio-option-badge">Principal</span>' : ''}
+        `;
+        
+        selector.appendChild(option);
+    });
+}
+
+// Handle doctor input keypress
+window.handleDoctorInputKeypress = function(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addDoctor();
+    }
+};
+
+// Add doctor to list
+window.addDoctor = function() {
+    const input = document.getElementById('doctor-input');
+    if (!input) return;
+    
+    const doctorName = input.value.trim();
+    if (!doctorName) {
+        showToast('Por favor ingresa el nombre del doctor', 'warning');
+        return;
+    }
+    
+    // Check if already exists
+    if (selectedDoctors.includes(doctorName)) {
+        showToast('Este doctor ya está en la lista', 'warning');
+        return;
+    }
+    
+    // Add to list
+    selectedDoctors.push(doctorName);
+    
+    // Clear input
+    input.value = '';
+    
+    // Update display
+    displayDoctorTags();
+};
+
+// Remove doctor from list
+window.removeDoctor = function(index) {
+    selectedDoctors.splice(index, 1);
+    displayDoctorTags();
+};
+
+// Display doctor tags
+function displayDoctorTags() {
+    const container = document.getElementById('doctor-tags');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    selectedDoctors.forEach((doctor, index) => {
+        const tag = document.createElement('div');
+        tag.className = 'doctor-tag';
+        tag.innerHTML = `
+            <span>${doctor}</span>
+            <i class="fas fa-times remove-tag" onclick="removeDoctor(${index})"></i>
+        `;
+        container.appendChild(tag);
+    });
 }
 
 // Update price fields based on type
@@ -320,6 +527,10 @@ async function saveServicio() {
     const servicioId = modal.dataset.servicioId;
     const isEdit = servicioId && servicioId !== '';
     
+    // Get selected consultorio
+    const selectedConsultorioRadio = modal.querySelector('[name="consultorio_id"]:checked');
+    const consultorioId = selectedConsultorioRadio ? selectedConsultorioRadio.value : null;
+    
     // Get form values
     const formData = {
         nombre: modal.querySelector('[name="nombre"]').value.trim(),
@@ -329,8 +540,8 @@ async function saveServicio() {
         tipo_precio: modal.querySelector('[name="tipo_precio"]').value,
         instrucciones_ia: modal.querySelector('[name="instrucciones_ia"]').value.trim(),
         instrucciones_paciente: modal.querySelector('[name="instrucciones_paciente"]').value.trim(),
-        requiere_preparacion: modal.querySelector('[name="requiere_preparacion"]').checked,
-        tiempo_preparacion: parseInt(modal.querySelector('[name="tiempo_preparacion"]').value || 0)
+        consultorio_id: consultorioId,
+        doctores_atienden: selectedDoctors
     };
     
     // Validate required fields
@@ -386,8 +597,9 @@ async function saveServicio() {
             });
         }
         
-        // Reload servicios
+        // Reload servicios and consultorios
         await loadServiciosData();
+        await loadConsultorios();
         
         closeModal();
         showToast(isEdit ? 'Servicio actualizado' : 'Servicio creado', 'success');
@@ -451,17 +663,6 @@ function setupEventListeners() {
     if (tipoPrecioSelect) {
         tipoPrecioSelect.addEventListener('change', updatePriceFields);
     }
-    
-    // Preparation checkbox
-    const prepCheckbox = document.querySelector('[name="requiere_preparacion"]');
-    if (prepCheckbox) {
-        prepCheckbox.addEventListener('change', (e) => {
-            const prepTimeField = document.getElementById('prep-time-field');
-            if (prepTimeField) {
-                prepTimeField.classList.toggle('hidden', !e.target.checked);
-            }
-        });
-    }
 }
 
 // Utility functions
@@ -470,6 +671,15 @@ function closeModal() {
         modal.classList.remove('show');
     });
     document.body.style.overflow = '';
+    
+    // Reset selected doctors
+    selectedDoctors = [];
+    
+    // Clear doctor input
+    const doctorInput = document.getElementById('doctor-input');
+    if (doctorInput) {
+        doctorInput.value = '';
+    }
 }
 
 function showLoading() {

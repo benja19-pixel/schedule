@@ -10,6 +10,9 @@
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Mock Auth para desarrollo -->
+    <script src="/static/js/mock-auth.js"></script>
     
     <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -44,7 +47,7 @@
             position: fixed;
             border-radius: 50%;
             filter: blur(60px);
-            opacity: 0.15;
+            opacity: 0.2;
             animation: float-slow 20s infinite ease-in-out;
             pointer-events: none;
         }
@@ -593,51 +596,36 @@
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-900">
+<body class="bg-white text-gray-900">
     <!-- Background decoration -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div class="gradient-orb w-96 h-96 bg-purple-400 -top-48 -right-48"></div>
         <div class="gradient-orb w-80 h-80 bg-pink-400 -bottom-32 -left-32" style="animation-delay: -5s;"></div>
-        <div class="gradient-orb w-64 h-64 bg-emerald-400 top-1/2 left-1/3" style="animation-delay: -10s;"></div>
+        <div class="gradient-orb w-64 h-64 bg-indigo-400 top-1/2 left-1/3" style="animation-delay: -10s;"></div>
     </div>
     
     <div class="flex h-screen relative">
-        <!-- Sidebar minimal -->
+        <!-- Sidebar -->
         <aside class="w-64 sidebar-glass relative z-20" id="sidebar">
             <div class="h-full flex flex-col">
-                <!-- Title aligned with menu items -->
+                <!-- Title -->
                 <div class="px-6" style="padding-top: 50px; padding-bottom: 32px;">
                     <h1 class="text-xl font-black text-gray-800">MediConnect</h1>
                 </div>
                 
-                <!-- Navigation minimal -->
+                <!-- Navigation -->
                 <nav class="flex-1 space-y-1 px-6">
-                    <a href="/dashboard" class="nav-link">
-                        Dashboard
-                    </a>
-                    <a href="http://localhost:8000/miagenda" class="nav-link active">
-                        Mi agenda
-                    </a>
-                    <a href="/patients" class="nav-link">
-                        Pacientes
-                    </a>
-                    <a href="http://localhost:8000/configurar-horario" class="nav-link">
-                        Configurar Horario
-                    </a>
-                    <a href="/ai-tools" class="nav-link">
-                        Asistente medico IA
-                    </a>
-                    <a href="/soap-notes" class="nav-link">
-                        Notas SOAP
-                    </a>
-                    <a href="/virtual-secretary" class="nav-link">
-                        Secretaria Virtual
-                    </a>
+                    <a href="/dashboard" class="nav-link">Dashboard</a>
+                    <a href="/miagenda" class="nav-link active">Mi agenda</a>
+                    <a href="/patients" class="nav-link">Pacientes</a>
+                    <a href="/mis-consultorios" class="nav-link">Mis Consultorios</a>
+                    <a href="/configurar-horario" class="nav-link">Configurar Horario</a>
+                    <a href="/configurar-servicios" class="nav-link">Configurar Servicios</a>
                 </nav>
                 
                 <!-- User section -->
                 <div class="p-6 pt-0 mt-auto border-t border-gray-200">
-                    <a href="http://localhost:8000/account" class="user-profile-link flex items-center gap-3 px-3 py-3 mx-3 rounded-xl hover:bg-purple-50 transition-all cursor-pointer group border border-transparent hover:border-purple-200" title="Ir a mi cuenta">
+                    <a href="/account" class="user-profile-link flex items-center gap-3 px-3 py-3 mx-3 rounded-xl hover:bg-purple-50 transition-all cursor-pointer group border border-transparent hover:border-purple-200" title="Ir a mi cuenta">
                         <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=40&h=40&fit=crop&crop=faces" 
                              alt="Doctor" 
                              class="w-10 h-10 rounded-full ring-2 ring-gray-200 group-hover:ring-purple-300 transition-all">
@@ -670,7 +658,7 @@
         </aside>
         
         <!-- Mobile menu toggle -->
-        <button class="md:hidden fixed bottom-4 right-4 z-30 bg-gradient-to-br from-purple-600 to-pink-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center" onclick="toggleSidebar()">
+        <button class="md:hidden fixed bottom-4 right-4 z-30 bg-gradient-to-br from-purple-500 to-pink-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center" onclick="toggleSidebar()">
             <i class="fas fa-bars"></i>
         </button>
         
@@ -788,6 +776,14 @@
             </div>
         </main>
     </div>
+    
+    <!-- Toggle Sidebar Script -->
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+    </script>
     
     <!-- Load scripts in correct order -->
     <script src="/static/js/app.js"></script>

@@ -357,7 +357,7 @@ async def get_horario_exceptions(
             "is_working_day": exc.is_working_day,
             "is_special_open": getattr(exc, 'is_special_open', False),
             "is_vacation": getattr(exc, 'is_vacation', False),
-            "vacation_group_id": getattr(exc, 'vacation_group_id', None),
+            "vacation_group_id": str(exc.vacation_group_id) if getattr(exc, 'vacation_group_id', None) else None,
             "opens_at": exc.opens_at.strftime("%H:%M") if exc.opens_at else None,
             "closes_at": exc.closes_at.strftime("%H:%M") if exc.closes_at else None,
             "time_blocks": exc.time_blocks or [],
@@ -397,10 +397,20 @@ async def create_horario_exception(
 ):
     """Crear excepción de horario con validaciones simplificadas"""
     
-    # Validate consultorio if provided
-    if request.consultorio_id:
+    # FIXED: Auto-assign principal consultorio if working day and no consultorio specified
+    consultorio_id_to_use = request.consultorio_id
+    
+    # If it's a working day (special-hours or special-open) and no consultorio specified
+    if request.is_working_day and not request.consultorio_id:
+        # Get principal consultorio
+        principal = Consultorio.get_principal_for_user(db, current_user.id)
+        if principal:
+            consultorio_id_to_use = str(principal.id)
+    
+    # Validate consultorio if specified
+    if consultorio_id_to_use:
         consultorio = db.query(Consultorio).filter(
-            Consultorio.id == request.consultorio_id,
+            Consultorio.id == consultorio_id_to_use,
             Consultorio.user_id == current_user.id,
             Consultorio.activo == True
         ).first()
@@ -442,7 +452,7 @@ async def create_horario_exception(
         closes_at=datetime.strptime(request.closes_at, "%H:%M").time() if request.closes_at else None,
         time_blocks=[block.dict() for block in request.time_blocks],
         reason=request.reason,
-        consultorio_id=request.consultorio_id
+        consultorio_id=consultorio_id_to_use  # Use the consultorio_id (either specified or principal)
     )
     
     # Set special fields
@@ -468,8 +478,15 @@ async def delete_horario_exception(
     db: Session = Depends(get_db)
 ):
     """Eliminar excepción de horario"""
+    # FIXED: Try to parse the exception_id as UUID first
+    try:
+        # Validate it's a proper UUID format
+        exception_uuid = uuid.UUID(exception_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="ID de excepción inválido")
+    
     exception = db.query(HorarioException).filter(
-        HorarioException.id == exception_id,
+        HorarioException.id == exception_uuid,
         HorarioException.user_id == current_user.id
     ).first()
     
@@ -518,7 +535,7 @@ async def get_consultorios_disponibles(
                 "id": str(c.id),
                 "nombre": c.nombre,
                 "direccion": c.get_short_address(),
-                "es_principal": c.es_principal,  # This flag helps frontend identify the principal
+                "es_principal": c.es_principal,
                 "foto_principal": c.foto_principal
             }
             for c in consultorios
