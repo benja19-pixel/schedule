@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Consultorios - MediConnect</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Custom Styles -->
+    <link rel="stylesheet" href="/static/css/consultorios.css">
+</head>
+<body class="bg-gray-50 text-gray-900">
+    <!-- Background decoration -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="gradient-orb w-96 h-96 bg-blue-400 -top-48 -right-48"></div>
+        <div class="gradient-orb w-80 h-80 bg-purple-400 -bottom-32 -left-32"></div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden">
+        <div class="loading-spinner"></div>
+        <div class="loading-message">Cargando...</div>
+    </div>
+    
+    <div class="flex h-screen relative">
+        <!-- Sidebar -->
+        <aside class="w-64 sidebar-glass relative z-20" id="sidebar">
+            <div class="h-full flex flex-col">
+                <!-- Title -->
+                <div class="px-6" style="padding-top: 50px; padding-bottom: 32px;">
+                    <h1 class="text-xl font-black text-gray-800">MediConnect</h1>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="flex-1 space-y-1 px-6">
+                    <a href="/dashboard" class="nav-link">Dashboard</a>
+                    <a href="/miagenda" class="nav-link">Mi agenda</a>
+                    <a href="/patients" class="nav-link">Pacientes</a>
+                    <a href="/mis-consultorios" class="nav-link active">Mis Consultorios</a>
+                    <a href="/configurar-horario" class="nav-link">Configurar Horario</a>
+                    <a href="/configurar-servicios" class="nav-link">Configurar Servicios</a>
+                </nav>
+                
+                <!-- User section -->
+                <div class="p-6 pt-0 mt-auto border-t border-gray-200">
+                    <a href="/account" class="user-profile-link">
+                        <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=40&h=40&fit=crop&crop=faces" 
+                             alt="Doctor" 
+                             class="w-10 h-10 rounded-full">
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-gray-900">Dr. García</p>
+                            <span class="text-xs text-gray-500">Mi cuenta</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Main content -->
+        <main class="flex-1 overflow-y-auto">
+            <div class="max-w-7xl mx-auto px-8 py-12">
+                <!-- Header -->
+                <header class="mb-10">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                                Mis Consultorios / Sedes
+                            </h1>
+                            <p class="text-lg text-gray-600">
+                                Gestiona las ubicaciones donde atiendes a tus pacientes
+                            </p>
+                        </div>
+                        <button id="add-consultorio-btn" class="btn-primary">
+                            <i class="fas fa-plus mr-2"></i>
+                            Nueva Sede
+                        </button>
+                    </div>
+                </header>
+                
+                <!-- Consultorios Grid -->
+                <div id="consultorios-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Consultorio cards will be loaded here -->
+                </div>
+                
+                <!-- Empty State -->
+                <div id="empty-state" class="hidden text-center py-16">
+                    <i class="fas fa-hospital text-6xl text-gray-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-gray-700 mb-2">No tienes consultorios registrados</h3>
+                    <p class="text-gray-500 mb-6">Agrega tu primer consultorio para comenzar</p>
+                    <button onclick="openConsultorioModal()" class="btn-primary">
+                        <i class="fas fa-plus mr-2"></i>
+                        Agregar Consultorio
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Consultorio Modal -->
+    <div id="consultorio-modal" class="modal">
+        <div class="modal-content consultorio-modal-content">
+            <!-- Modal Header with Cover Photo -->
+            <div class="modal-header-photo" id="modal-header-photo">
+                <button onclick="closeConsultorioModal()" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="photo-overlay">
+                    <div class="photo-actions">
+                        <label for="foto-principal-input" class="photo-action-btn">
+                            <i class="fas fa-camera"></i>
+                            <span>Cambiar foto</span>
+                        </label>
+                        <button onclick="removeFotoPrincipal()" class="photo-action-btn" id="remove-photo-btn">
+                            <i class="fas fa-trash"></i>
+                            <span>Eliminar</span>
+                        </button>
+                    </div>
+                </div>
+                <input type="file" id="foto-principal-input" accept="image/*" class="hidden" onchange="handleFotoPrincipal(event)">
+            </div>
+            
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <h3 class="text-2xl font-bold text-gray-900 mb-6">
+                    <span id="modal-title">Nuevo Consultorio</span>
+                </h3>
+                
+                <form id="consultorio-form" class="space-y-6">
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h4 class="form-section-title">Información Básica</h4>
+                        
+                        <div class="space-y-4">
+                            <div>
+                                <label class="form-label">Nombre del consultorio *</label>
+                                <input type="text" id="nombre" class="input-field" placeholder="Ej: Clínica Central - Torre A" required>
+                            </div>
+                            
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" id="es_principal" class="checkbox">
+                                <label for="es_principal" class="text-sm font-medium text-gray-700">
+                                    ¿Es tu consultorio principal?
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Location Information -->
+                    <div class="form-section">
+                        <h4 class="form-section-title">Ubicación</h4>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="form-label">País *</label>
+                                <select id="pais" class="input-field" required>
+                                    <option value="">Seleccionar...</option>
+                                    <option value="México" selected>México</option>
+                                    <option value="España">España</option>
+                                    <option value="Argentina">Argentina</option>
+                                    <option value="Colombia">Colombia</option>
+                                    <option value="Chile">Chile</option>
+                                    <option value="Perú">Perú</option>
+                                    <option value="Estados Unidos">Estados Unidos</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="form-label">Estado *</label>
+                                <input type="text" 
+                                       id="estado" 
+                                       class="input-field" 
+                                       list="estados-mexico"
+                                       placeholder="Selecciona o escribe un estado" 
+                                       required>
+                                <datalist id="estados-mexico">
+                                    <!-- Will be populated by JavaScript -->
+                                </datalist>
+                            </div>
+                            
+                            <div>
+                                <label class="form-label">Ciudad *</label>
+                                <input type="text" id="ciudad" class="input-field" placeholder="Ej: Coyoacán" required>
+                            </div>
+                            
+                            <div>
+                                <label class="form-label">Código Postal *</label>
+                                <input type="text" id="codigo_postal" class="input-field" placeholder="Ej: 04510" required>
+                            </div>
+                            
+                            <div>
+                                <label class="form-label">Calle *</label>
+                                <input type="text" id="calle" class="input-field" placeholder="Ej: Av. Universidad" required>
+                            </div>
+                            
+                            <div>
+                                <label class="form-label">Número *</label>
+                                <input type="text" id="numero" class="input-field" placeholder="Ej: 3000" required>
+                            </div>
+                            
+                            <div class="md:col-span-2">
+                                <label class="form-label">Colonia/Barrio</label>
+                                <input type="text" id="colonia" class="input-field" placeholder="Ej: Ciudad Universitaria">
+                            </div>
+                        </div>
+                        
+                        <!-- Map Preview Button -->
+                        <button type="button" onclick="previewLocation()" class="btn-secondary mt-4">
+                            <i class="fas fa-map-marked-alt mr-2"></i>
+                            Vista previa en mapa
+                        </button>
+                    </div>
+                    
+                    <!-- Map Preview Container -->
+                    <div id="map-preview-container" class="hidden">
+                        <h4 class="form-section-title">Vista previa de ubicación</h4>
+                        <div id="map-preview" class="map-container"></div>
+                        <p class="text-sm text-gray-600 mt-2">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Puedes ajustar la ubicación exacta arrastrando el marcador
+                        </p>
+                    </div>
+                    
+                    <!-- Optional Extras (Collapsible) -->
+                    <div class="form-section">
+                        <button type="button" onclick="toggleExtras()" class="extras-toggle">
+                            <span>Información adicional (opcional)</span>
+                            <i class="fas fa-chevron-down" id="extras-icon"></i>
+                        </button>
+                        
+                        <div id="extras-section" class="hidden space-y-4 mt-4">
+                            <div>
+                                <label class="form-label">Notas</label>
+                                <textarea id="notas" class="input-field" rows="3" 
+                                          placeholder="Ej: Piso 5, Consultorio 501"></textarea>
+                            </div>
+                            
+                            <div class="flex items-center gap-3">
+                                <input type="checkbox" id="tiene_estacionamiento" class="checkbox">
+                                <label for="tiene_estacionamiento" class="text-sm font-medium text-gray-700">
+                                    Tiene estacionamiento
+                                </label>
+                            </div>
+                            
+                            <div>
+                                <label class="form-label">Accesibilidad</label>
+                                <select id="accesibilidad" class="input-field">
+                                    <option value="todos">Accesible para todos</option>
+                                    <option value="con_discapacidad">Accesible para personas con discapacidad</option>
+                                    <option value="sin_discapacidad">Solo personas sin discapacidad</option>
+                                    <option value="limitada">Accesibilidad limitada</option>
+                                </select>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <div class="phone-toggle-container">
+                                        <div id="use-virtual-phone-toggle" class="toggle-switch" onclick="toggleVirtualSecretaryPhone()">
+                                            <div class="toggle-slider"></div>
+                                        </div>
+                                        <label class="toggle-label" onclick="toggleVirtualSecretaryPhone()">
+                                            Usar el mismo número de la secretaria virtual
+                                        </label>
+                                    </div>
+                                    
+                                    <div id="phone-field-container">
+                                        <label class="form-label">Teléfono del consultorio</label>
+                                        <input type="tel" id="telefono_consultorio" class="input-field" 
+                                               placeholder="Ej: +52 55 1234 5678">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="form-label">Email del consultorio</label>
+                                    <input type="email" id="email_consultorio" class="input-field" 
+                                           placeholder="Ej: contacto@clinica.com">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Secondary Photos -->
+                    <div class="form-section">
+                        <h4 class="form-section-title">Fotos adicionales</h4>
+                        <div id="secondary-photos-grid" class="secondary-photos-grid">
+                            <!-- Secondary photos will be displayed here -->
+                            <label for="foto-secundaria-input" class="add-photo-box">
+                                <i class="fas fa-plus"></i>
+                                <span>Agregar foto</span>
+                            </label>
+                        </div>
+                        <input type="file" id="foto-secundaria-input" accept="image/*" class="hidden" onchange="handleFotoSecundaria(event)">
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button type="button" onclick="saveConsultorio()" class="btn-primary">
+                    <i class="fas fa-save mr-2"></i>
+                    <span id="save-btn-text">Guardar Consultorio</span>
+                </button>
+                <button type="button" onclick="closeConsultorioModal()" class="btn-secondary">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Map Modal -->
+    <div id="map-modal" class="modal">
+        <div class="map-modal-content">
+            <div class="map-modal-header">
+                <h3 class="text-xl font-bold">Ubicación del Consultorio</h3>
+                <button onclick="closeMapModal()" class="close-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="full-map" class="full-map"></div>
+            <div class="map-modal-footer">
+                <p class="text-sm text-gray-600">
+                    <i class="fas fa-map-marker-alt text-red-500 mr-1"></i>
+                    <span id="map-address">Cargando dirección...</span>
+                </p>
+                <button onclick="confirmLocation()" class="btn-primary">
+                    Confirmar ubicación
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toast-message">Mensaje</span>
+    </div>
+    
+    <!-- Confirm Delete Modal -->
+    <div id="confirm-modal" class="confirm-modal">
+        <div class="confirm-modal-content">
+            <h3 class="text-lg font-bold text-gray-900 mb-3">Confirmar eliminación</h3>
+            <p class="text-sm text-gray-600 mb-6">¿Estás seguro de eliminar este consultorio?</p>
+            <div class="flex gap-3">
+                <button onclick="confirmDelete()" class="btn-danger">
+                    Eliminar
+                </button>
+                <button onclick="cancelDelete()" class="btn-secondary">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Google Maps Script -->
+    <script>
+        // Add your Google Maps API key here
+        window.GOOGLE_MAPS_API_KEY = '{{ google_maps_api_key }}';
+    </script>
+    <script async defer 
+            src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&callback=initMap&language=es">
+    </script>
+    
+    <!-- Scripts -->
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/consultorios.js"></script>
+</body>
+</html>

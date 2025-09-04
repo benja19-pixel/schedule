@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expedientes Clínicos - MediConnect</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-feature-settings: 'cv11', 'ss01', 'ss03';
+        }
+        
+        body {
+            font-weight: 400;
+            letter-spacing: -0.011em;
+            line-height: 1.5;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+            letter-spacing: -0.022em;
+            line-height: 1.2;
+        }
+        
+        /* Smooth scroll behavior */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Gradient orbs for background depth */
+        .gradient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.2;
+            animation: float-slow 20s infinite ease-in-out;
+            pointer-events: none;
+        }
+        
+        @keyframes float-slow {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        
+        /* Sidebar glass effect */
+        .sidebar-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(229, 231, 235, 0.5);
+        }
+        
+        /* Nav link minimal styles */
+        .nav-link {
+            position: relative;
+            transition: all 0.2s ease;
+            color: #6b7280;
+            font-weight: 500;
+            text-decoration: none;
+            display: block;
+            padding: 0.625rem 0;
+            margin: 0;
+        }
+        
+        .nav-link:hover {
+            color: #111827;
+        }
+        
+        .nav-link.active {
+            color: #ec4899;
+            font-weight: 600;
+        }
+        
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+            border-radius: 0 4px 4px 0;
+        }
+        
+        /* Status dot */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+        
+        /* Premium patient card */
+        .patient-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: default;
+            border: 2px solid transparent;
+        }
+        
+        .patient-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -10px rgba(147, 51, 234, 0.2);
+            border-color: rgba(147, 51, 234, 0.1);
+        }
+        
+        .patient-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            padding: 2px;
+            background: linear-gradient(135deg, #ec4899, #9333ea);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .patient-card:hover::before {
+            opacity: 1;
+        }
+        
+        .patient-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -15px rgba(147, 51, 234, 0.2);
+        }
+        
+        /* Search field premium */
+        .search-field {
+            position: relative;
+        }
+        
+        .search-field input {
+            padding-left: 48px;
+            padding-right: 120px;
+            height: 56px;
+            font-size: 15px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .search-field input:focus {
+            border-color: #9333ea;
+            transform: translateY(-1px);
+            box-shadow: 0 12px 24px -8px rgba(147, 51, 234, 0.15);
+        }
+        
+        .search-field .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            transition: color 0.3s ease;
+        }
+        
+        .search-field input:focus ~ .search-icon {
+            color: #9333ea;
+        }
+        
+        /* Quick stats cards */
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(147, 51, 234, 0.1) 0%, transparent 70%);
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+        
+        .stat-card:hover::after {
+            opacity: 1;
+            top: -75%;
+            right: -75%;
+        }
+        
+        /* Filter pills */
+        .filter-pill {
+            padding: 10px 20px;
+            border-radius: 999px;
+            font-size: 14px;
+            font-weight: 600;
+            background: white;
+            color: #6b7280;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .filter-pill:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.1);
+        }
+        
+        .filter-pill.active {
+            background: linear-gradient(135deg, #ec4899 0%, #9333ea 100%);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 8px 16px -4px rgba(147, 51, 234, 0.3);
+        }
+        
+        /* Modal enhanced */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .modal.show .modal-content {
+            transform: scale(1) translateY(0);
+        }
+        
+        /* Scrollbar styles for modals */
+        .modal-content::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .modal-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .modal-content::-webkit-scrollbar-thumb {
+            background: #9333ea;
+            border-radius: 10px;
+        }
+        
+        .modal-content::-webkit-scrollbar-thumb:hover {
+            background: #7c3aed;
+        }
+        
+        /* Form inputs */
+        .form-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: white;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #9333ea;
+            box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+            transform: translateY(-1px);
+        }
+        
+        .form-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4b5563;
+            margin-bottom: 6px;
+            display: block;
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #111827;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* Custom button styles for patient cards - 3D effect */
+        .patient-card button {
+            box-shadow: 
+                0 2px 4px rgba(0, 0, 0, 0.1),
+                0 1px 0 rgba(255, 255, 255, 0.5) inset,
+                0 -2px 0 rgba(0, 0, 0, 0.05) inset;
+            transform: translateY(0);
+            display: inline-flex;
+            align-items: center;
+            font-weight: 700;
+            letter-spacing: 0.025em;
+            text-transform: none;
+            position: relative;
+            overflow: hidden;
+            background-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0));
+        }
+        
+        .patient-card button:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 4px 8px rgba(0, 0, 0, 0.15),
+                0 1px 0 rgba(255, 255, 255, 0.5) inset,
+                0 -2px 0 rgba(0, 0, 0, 0.05) inset;
+        }
+        
+        .patient-card button:active {
+            transform: translateY(0);
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.15),
+                inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+        }
+        
+        .patient-card button:focus {
+            outline: 2px solid rgba(147, 51, 234, 0.5);
+            outline-offset: 2px;
+        }
+        
+        .patient-card button i {
+            font-size: 11px;
+        }
+        
+        /* Make buttons look more clickable */
+        .patient-card button {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        /* User profile hover effect */
+        .user-profile-link {
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .sidebar-glass {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 40;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+            }
+            
+            .sidebar-glass.open {
+                transform: translateX(0);
+            }
+            
+            main {
+                margin-left: 0 !important;
+            }
+            
+            .modal-content {
+                max-width: 95%;
+                margin: 10px;
+            }
+        }
+        
+        /* Contact method checkbox style */
+        .contact-checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .contact-checkbox:hover {
+            border-color: #9333ea;
+            background: rgba(147, 51, 234, 0.05);
+        }
+        
+        .contact-checkbox input:checked + span {
+            color: #9333ea;
+            font-weight: 600;
+        }
+        
+        .contact-checkbox input:checked ~ .contact-checkbox {
+            border-color: #9333ea;
+            background: rgba(147, 51, 234, 0.1);
+        }
+        
+        /* Notes style */
+        .note-item {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        /* Payment modal sections - Less saturated colors */
+        .payment-modal-section {
+            background: linear-gradient(135deg, #fafafa 0%, #f9fafb 100%);
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        /* Payment carousel height adjustment for multiple debts */
+        #payment-carousel {
+            min-height: 120px;
+        }
+        
+        /* Compact debt display in carousel */
+        #payment-slider .text-xs {
+            line-height: 1.3;
+        }
+        
+        /* Debt selector styles */
+        .debt-option {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .debt-option:hover {
+            transform: translateX(2px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .debt-option.selected {
+            background-color: #f0fdf4;
+            border-color: #16a34a;
+        }
+        
+        /* Overdue debt styles */
+        .debt-option.overdue {
+            background-color: #fef2f2;
+            border-color: #fca5a5;
+        }
+        
+        .debt-option.overdue:hover {
+            background-color: #fee2e2;
+            border-color: #f87171;
+        }
+        
+        /* Dropdown menu styles for patient options */
+        .patient-options-dropdown {
+            position: absolute;
+            top: 40px;
+            right: 12px;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+            z-index: 50;
+            min-width: 160px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+        }
+        
+        .patient-options-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .patient-options-dropdown button {
+            width: 100%;
+            padding: 10px 16px;
+            text-align: left;
+            font-size: 14px;
+            color: #374151;
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            box-shadow: none;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .patient-options-dropdown button:hover {
+            background-color: #f3f4f6;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .patient-options-dropdown button:first-child {
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+        
+        .patient-options-dropdown button:last-child {
+            border-bottom-left-radius: 12px;
+            border-bottom-right-radius: 12px;
+        }
+        
+        .patient-options-dropdown button.danger {
+            color: #dc2626;
+        }
+        
+        .patient-options-dropdown button.danger:hover {
+            background-color: #fef2f2;
+        }
+        
+        /* Three dots button style */
+        .patient-options-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .patient-options-btn:hover {
+            background: white;
+            color: #374151;
+            border-color: #d1d5db;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .patient-options-btn.active {
+            background: #f3f4f6;
+            color: #111827;
+            border-color: #9ca3af;
+        }
+        
+        .patient-options-btn i {
+            font-size: 10px;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+    <!-- Background decoration -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="gradient-orb w-96 h-96 bg-purple-400 -top-48 -right-48"></div>
+        <div class="gradient-orb w-80 h-80 bg-pink-400 -bottom-32 -left-32" style="animation-delay: -5s;"></div>
+        <div class="gradient-orb w-64 h-64 bg-blue-400 top-1/2 left-1/3" style="animation-delay: -10s;"></div>
+    </div>
+    
+    <div class="flex h-screen relative">
+        <!-- Sidebar minimal -->
+        <aside class="w-64 sidebar-glass relative z-20" id="sidebar">
+            <div class="h-full flex flex-col">
+                <!-- Title aligned with menu items -->
+                <div class="px-6" style="padding-top: 50px; padding-bottom: 32px;">
+                    <h1 class="text-xl font-black text-gray-800">MediConnect</h1>
+                </div>
+                
+                <!-- Navigation minimal -->
+                <nav class="flex-1 space-y-1 px-6">
+                    <a href="/dashboard" class="nav-link">
+                        Dashboard
+                    </a>
+                    <a href="/miagenda" class="nav-link">
+                        Mi agenda
+                    </a>
+                    <a href="/patients" class="nav-link active">
+                        Pacientes
+                    </a>
+                    <a href="/configurar-horario" class="nav-link">
+                        Configurar Horario
+                    </a>
+                </nav>
+                
+                <!-- User section -->
+                <div class="p-6 pt-0 mt-auto border-t border-gray-200">
+                    <a href="/account" class="user-profile-link flex items-center gap-3 px-3 py-3 mx-3 rounded-xl hover:bg-purple-50 transition-all cursor-pointer group border border-transparent hover:border-purple-200" title="Ir a mi cuenta">
+                        <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=40&h=40&fit=crop&crop=faces" 
+                             alt="Doctor" 
+                             class="w-10 h-10 rounded-full ring-2 ring-gray-200 group-hover:ring-purple-300 transition-all">
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-gray-900 group-hover:text-purple-600 transition-colors" id="doctor-name">Dr. García</p>
+                            <div class="flex items-center gap-2">
+                                <span class="status-dot"></span>
+                                <span class="text-xs text-gray-500 group-hover:text-purple-600 transition-colors" id="user-status">Mi cuenta</span>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-purple-600 transition-all"></i>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Mobile menu toggle -->
+        <button class="md:hidden fixed bottom-4 right-4 z-30 bg-gradient-to-br from-purple-600 to-purple-700 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <!-- Main content -->
+        <main class="flex-1 overflow-y-auto overflow-x-hidden" style="position: relative;">
+            <div class="max-w-7xl mx-auto px-8 py-10" style="position: relative; padding-bottom: 150px;">
+                <!-- Header Section -->
+                <div class="mb-10">
+                    <div class="flex items-center justify-between mb-2">
+                        <div>
+                            <h1 class="text-4xl font-bold text-gray-900 mb-2">Pacientes</h1>
+                            <p class="text-gray-600">Gestión de expedientes clínicos</p>
+                        </div>
+                        <button onclick="openNewPatientModal()" class="px-7 py-3.5 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:shadow-xl transition-all transform hover:scale-105">
+                            <i class="fas fa-plus mr-2"></i>
+                            Registrar Paciente
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Main Content Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Main Column - Patient List -->
+                    <div class="lg:col-span-2" style="position: relative;">
+                        <!-- Search and Filters -->
+                        <div class="bg-white rounded-2xl p-6 shadow-sm mb-6">
+                            <div class="search-field mb-4">
+                                <input type="text" 
+                                       id="search-patients"
+                                       placeholder="Buscar por nombre, teléfono o correo..." 
+                                       class="w-full rounded-xl focus:outline-none">
+                                <i class="fas fa-search search-icon"></i>
+                                <div class="absolute right-4 top-1/2 transform -translate-y-1/2 flex gap-2">
+                                    <kbd class="px-2 py-1 bg-gray-100 rounded text-xs text-gray-500 font-semibold">⌘K</kbd>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3 flex-wrap">
+                                <button class="filter-pill active" onclick="filterPatients('all', this)">
+                                    Todos
+                                    <span class="ml-2 text-xs opacity-70" id="total-patients-badge">0</span>
+                                </button>
+                                <button class="filter-pill" onclick="filterPatients('today', this)">
+                                    <i class="fas fa-clock mr-2"></i>
+                                    Con cita Hoy
+                                </button>
+                                <button class="filter-pill" onclick="filterPatients('debt', this)">
+                                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                                    Con deuda
+                                </button>
+                                <button class="filter-pill" onclick="filterPatients('new', this)">
+                                    <i class="fas fa-star mr-2"></i>
+                                    Nuevos
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Patient Cards Container -->
+                        <div class="space-y-4" style="position: relative; z-index: 1;">
+                            <!-- Cards will be loaded here by JavaScript -->
+                        </div>
+                        
+                        <!-- Load More -->
+                        <div class="text-center mt-8">
+                            <button class="px-6 py-3 bg-white border-2 border-gray-200 text-gray-700 rounded-xl font-semibold hover:border-purple-300 hover:bg-purple-50 transition-all">
+                                Cargar más pacientes
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column - Payment Calendar and Stats -->
+                    <div class="space-y-6">
+                        <!-- Cuentas por Cobrar - Updated title and compact design -->
+                        <div class="bg-gradient-to-br from-purple-50 to-purple-50/50 rounded-xl p-4 border border-purple-100">
+                            <div class="flex items-center justify-between mb-3">
+                                <h3 class="text-sm font-bold text-gray-900">Cuentas por Cobrar</h3>
+                                <div class="flex items-center gap-2">
+                                    <div class="flex flex-col items-end">
+                                        <span class="text-xs text-purple-500 font-medium">Total adeudado</span>
+                                        <span class="text-xs text-purple-700 font-bold" id="total-debt-amount">
+                                            $0.00
+                                        </span>
+                                    </div>
+                                    <button onclick="scrollPaymentPrev()" class="w-6 h-6 rounded-full bg-purple-100 hover:bg-purple-200 flex items-center justify-center text-purple-600 transition-all">
+                                        <i class="fas fa-chevron-left text-xs"></i>
+                                    </button>
+                                    <button onclick="scrollPaymentNext()" class="w-6 h-6 rounded-full bg-purple-100 hover:bg-purple-200 flex items-center justify-center text-purple-600 transition-all">
+                                        <i class="fas fa-chevron-right text-xs"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Compact Payment Display - Adjusted height for multiple debts -->
+                            <div id="payment-carousel" class="relative overflow-hidden">
+                                <div class="flex transition-transform duration-500 ease-in-out" id="payment-slider" style="transform: translateX(0);">
+                                    <!-- Payment items will be loaded here by JavaScript -->
+                                </div>
+                            </div>
+                            
+                            <!-- Dots indicator -->
+                            <div class="flex justify-center gap-1 mt-2" id="payment-dots">
+                                <!-- Dots will be added by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Quick Stats Cards -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="stat-card">
+                                <div class="flex flex-col">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center mb-3">
+                                        <i class="fas fa-users text-gray-400"></i>
+                                    </div>
+                                    <p class="text-2xl font-bold text-gray-900" data-stat="total-patients">0</p>
+                                    <p class="text-xs text-gray-500 mt-1">Pacientes registrados</p>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="flex flex-col">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center mb-3">
+                                        <i class="fas fa-exclamation-circle text-gray-400"></i>
+                                    </div>
+                                    <p class="text-2xl font-bold text-gray-900" data-stat="patients-debt">0</p>
+                                    <p class="text-xs text-gray-500 mt-1">Con deuda</p>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="flex flex-col">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center mb-3">
+                                        <i class="fas fa-calendar-check text-gray-400"></i>
+                                    </div>
+                                    <p class="text-2xl font-bold text-gray-900" data-stat="active-today">0</p>
+                                    <p class="text-xs text-gray-500 mt-1">Citas hoy</p>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-card">
+                                <div class="flex flex-col">
+                                    <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center mb-3">
+                                        <i class="fas fa-user-plus text-gray-400"></i>
+                                    </div>
+                                    <p class="text-2xl font-bold text-gray-900" data-stat="new-this-month">0</p>
+                                    <p class="text-xs text-gray-500 mt-1">Nuevos este mes</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- New Patient Modal - SIMPLIFICADO -->
+    <div id="patient-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-2xl font-bold text-gray-900">Registro Rápido de Paciente</h3>
+                        <p class="text-sm text-gray-500 mt-1">Complete los datos básicos</p>
+                    </div>
+                    <button onclick="closePatientModal()" class="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <form id="patient-form">
+                    <div class="space-y-4">
+                        <!-- Nombre y Apellido -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="form-label">Nombre(s) *</label>
+                                <input type="text" id="patient-first-name" class="form-input" placeholder="María" required autofocus>
+                            </div>
+                            <div>
+                                <label class="form-label">Apellidos *</label>
+                                <input type="text" id="patient-last-name" class="form-input" placeholder="García López" required>
+                            </div>
+                        </div>
+                        
+                        <!-- Edad y Sexo -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="form-label">Edad *</label>
+                                <input type="number" id="patient-age" class="form-input" placeholder="32" min="0" max="120" required>
+                            </div>
+                            <div>
+                                <label class="form-label">Sexo *</label>
+                                <select id="patient-sex" class="form-input" required>
+                                    <option value="">Seleccionar</option>
+                                    <option value="F">Femenino</option>
+                                    <option value="M">Masculino</option>
+                                    <option value="O">Otro</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Métodos de contacto - Seleccionable -->
+                        <div>
+                            <label class="form-label mb-3">¿Qué datos de contacto desea registrar? *</label>
+                            <div class="flex gap-3 mb-3">
+                                <label class="contact-checkbox">
+                                    <input type="checkbox" id="check-telefono" onchange="toggleContactField('telefono')" checked>
+                                    <span>Teléfono</span>
+                                </label>
+                                <label class="contact-checkbox">
+                                    <input type="checkbox" id="check-email" onchange="toggleContactField('email')">
+                                    <span>Email</span>
+                                </label>
+                                <label class="contact-checkbox">
+                                    <input type="checkbox" id="check-whatsapp" onchange="toggleContactField('whatsapp')">
+                                    <span>WhatsApp</span>
+                                </label>
+                            </div>
+                            
+                            <div class="space-y-3">
+                                <div id="field-telefono">
+                                    <input type="tel" id="patient-phone" class="form-input" placeholder="Teléfono: 555-0123-4567">
+                                </div>
+                                <div id="field-email" style="display: none;">
+                                    <input type="email" id="patient-email" class="form-input" placeholder="Email: correo@ejemplo.com">
+                                </div>
+                                <div id="field-whatsapp" style="display: none;">
+                                    <input type="tel" id="patient-whatsapp" class="form-input" placeholder="WhatsApp: 555-0123-4567">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Fecha de nacimiento opcional -->
+                        <div>
+                            <label class="form-label">Fecha de nacimiento (opcional)</label>
+                            <input type="date" id="patient-birth-date" class="form-input">
+                        </div>
+                        
+                        <!-- Notas iniciales opcionales -->
+                        <div>
+                            <label class="form-label">Notas iniciales (opcional)</label>
+                            <textarea id="patient-notes" class="form-input" rows="2" placeholder="Alergias, condiciones especiales, etc."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button type="submit" class="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-xl font-semibold hover:shadow-lg transition-all">
+                            <i class="fas fa-save mr-2"></i>
+                            Guardar Paciente
+                        </button>
+                        <button type="button" onclick="closePatientModal()" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Patient Confirmation Modal -->
+    <div id="delete-patient-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="p-6">
+                <div class="flex flex-col items-center text-center">
+                    <div class="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-600 text-3xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">¿Eliminar paciente?</h3>
+                    <p class="text-gray-600 mb-6">
+                        Esta acción eliminará permanentemente a <span id="delete-patient-name" class="font-semibold text-gray-900"></span> 
+                        y todos sus datos asociados (citas, pagos, notas, historial).
+                    </p>
+                    <p class="text-sm text-red-600 mb-6">
+                        <i class="fas fa-info-circle mr-1"></i>
+                        Esta acción no se puede deshacer.
+                    </p>
+                </div>
+                
+                <div class="flex gap-3">
+                    <button onclick="confirmDeletePatient()" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all">
+                        <i class="fas fa-trash-alt mr-2"></i>
+                        Sí, eliminar
+                    </button>
+                    <button onclick="closeDeletePatientModal()" class="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Historial de Citas Modal -->
+    <div id="historial-citas-modal" class="modal">
+        <div class="modal-content" style="max-width: 650px;">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Historial de Citas</h3>
+                        <p class="text-sm text-gray-500 mt-1">Citas pasadas y próximas</p>
+                    </div>
+                    <button onclick="closeHistorialCitas()" class="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Próximas citas -->
+                <div class="mb-6">
+                    <h4 class="text-sm font-bold text-gray-700 mb-3">Próximas Citas</h4>
+                    <div class="space-y-3" id="upcoming-appointments">
+                        <!-- Appointments will be loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Citas pasadas -->
+                <div>
+                    <h4 class="text-sm font-bold text-gray-700 mb-3">Citas Pasadas</h4>
+                    <div class="space-y-3" id="past-appointments">
+                        <!-- Appointments will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Notas/Recordatorios Modal -->
+    <div id="notas-modal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Notas y Recordatorios</h3>
+                        <p class="text-sm text-gray-500 mt-1">Información adicional del paciente</p>
+                    </div>
+                    <button onclick="closeNotasModal()" class="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="mb-4">
+                    <button onclick="agregarNota()" class="px-4 py-2 bg-amber-600 text-white rounded-lg text-sm font-medium hover:bg-amber-700">
+                        <i class="fas fa-plus mr-2"></i>
+                        Agregar nota
+                    </button>
+                </div>
+                
+                <div class="space-y-3" id="notes-list">
+                    <!-- Notes will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Editar Datos Modal - SIMPLIFICADO -->
+    <div id="editar-datos-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Editar Datos del Paciente</h3>
+                        <p class="text-sm text-gray-500 mt-1">Actualizar información</p>
+                    </div>
+                    <button onclick="closeEditarDatosModal()" class="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <form id="edit-patient-form">
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="form-label">Nombre(s)</label>
+                                <input type="text" id="edit-first-name" class="form-input" value="">
+                            </div>
+                            <div>
+                                <label class="form-label">Apellidos</label>
+                                <input type="text" id="edit-last-name" class="form-input" value="">
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="form-label">Edad</label>
+                                <input type="number" id="edit-age" class="form-input" value="">
+                            </div>
+                            <div>
+                                <label class="form-label">Sexo</label>
+                                <select id="edit-sex" class="form-input">
+                                    <option value="F">Femenino</option>
+                                    <option value="M">Masculino</option>
+                                    <option value="O">Otro</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="form-label">Teléfono</label>
+                            <input type="tel" id="edit-phone" class="form-input" value="">
+                        </div>
+                        
+                        <div>
+                            <label class="form-label">Email</label>
+                            <input type="email" id="edit-email" class="form-input" value="">
+                        </div>
+                        
+                        <div>
+                            <label class="form-label">WhatsApp</label>
+                            <input type="tel" id="edit-whatsapp" class="form-input" placeholder="Agregar WhatsApp">
+                        </div>
+                        
+                        <div>
+                            <label class="form-label">Notas adicionales</label>
+                            <textarea id="edit-notes" class="form-input" rows="2" placeholder="Información relevante..."></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button type="button" onclick="saveEditarDatos()" class="flex-1 px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-all">
+                            <i class="fas fa-save mr-2"></i>
+                            Guardar cambios
+                        </button>
+                        <button type="button" onclick="closeEditarDatosModal()" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gestión de Pagos Modal - DISEÑO MEJORADO -->
+    <div id="gestion-pagos-modal" class="modal">
+        <div class="modal-content" style="max-width: 700px; max-height: 85vh; overflow-y: auto;">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900" id="payment-modal-title">Gestión de Pagos y Deudas</h3>
+                        <p class="text-sm text-gray-500 mt-1">Control de ingresos y adeudos</p>
+                    </div>
+                    <button onclick="closeGestionPagosModal()" class="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Resumen financiero - Diseño más limpio -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div class="payment-modal-section">
+                        <p class="text-xs text-gray-600 mb-1 font-medium">Adeudo actual</p>
+                        <p class="text-2xl font-bold text-red-700" id="patient-debt">$0.00</p>
+                    </div>
+                    <div class="payment-modal-section">
+                        <p class="text-xs text-gray-600 mb-1 font-medium">Saldo a favor</p>
+                        <p class="text-2xl font-bold text-green-700" id="patient-credit">$0.00</p>
+                    </div>
+                </div>
+                
+                <!-- Acciones - Colores más sutiles -->
+                <div class="flex gap-3 mb-6">
+                    <button onclick="registrarDeuda()" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm font-medium hover:bg-red-700 transition-all">
+                        <i class="fas fa-minus-circle mr-2"></i>
+                        Registrar deuda
+                    </button>
+                    <button onclick="registrarPago()" class="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-all">
+                        <i class="fas fa-plus-circle mr-2"></i>
+                        Registrar pago
+                    </button>
+                    <button onclick="agregarSaldoFavor()" class="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 transition-all" style="display: none;">
+                        <i class="fas fa-wallet mr-2"></i>
+                        Saldo a favor
+                    </button>
+                </div>
+                
+                <!-- Historial - Diseño más limpio -->
+                <div>
+                    <h4 class="text-sm font-bold text-gray-700 mb-3">Historial de movimientos</h4>
+                    <div class="space-y-2 max-h-96 overflow-y-auto bg-gray-50 rounded-lg p-3" id="payment-history">
+                        <!-- Payment history will be loaded here -->
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex gap-3">
+                    <button onclick="closeGestionPagosModal()" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para registrar deuda - CON FORMATO DE DINERO -->
+    <div id="registrar-deuda-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Registrar Deuda</h3>
+                        <p class="text-sm text-gray-500 mt-1">Agregar nuevo adeudo</p>
+                    </div>
+                    <button onclick="closeRegistrarDeudaModal()" class="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <form id="debt-form">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="form-label">Concepto *</label>
+                            <input type="text" id="debt-concept" class="form-input" placeholder="Ej: Consulta médica" required>
+                        </div>
+                        
+                        <div>
+                            <label class="form-label">Monto *</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                <input type="text" id="debt-amount" class="form-input pl-8" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="form-label">
+                                Fecha de pago esperada 
+                                <span class="text-xs text-gray-400 font-normal">(opcional)</span>
+                            </label>
+                            <input type="date" id="debt-due-date" class="form-input">
+                            <p class="text-xs text-gray-500 mt-1">Si no especifica fecha, quedará como deuda sin vencimiento</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+                        <p class="text-xs text-blue-700">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            La deuda se registrará con la fecha y hora actual
+                        </p>
+                    </div>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button type="button" onclick="guardarDeuda()" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-all">
+                            <i class="fas fa-save mr-2"></i>
+                            Registrar deuda
+                        </button>
+                        <button type="button" onclick="closeRegistrarDeudaModal()" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para registrar pago - COMPLETAMENTE REDISEÑADO -->
+    <div id="registrar-pago-modal" class="modal">
+        <div class="modal-content" style="max-width: 550px;">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Registrar Pago</h3>
+                        <p class="text-sm text-gray-500 mt-1">Seleccione la deuda a pagar</p>
+                    </div>
+                    <button onclick="closeRegistrarPagoModal()" class="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <form id="payment-form">
+                    <div class="space-y-4">
+                        <!-- Debt selector -->
+                        <div>
+                            <label class="form-label mb-3">Seleccione la deuda a pagar *</label>
+                            <div class="space-y-2 max-h-48 overflow-y-auto" id="debt-selector">
+                                <!-- Debts will be loaded here dynamically -->
+                            </div>
+                        </div>
+                        
+                        <!-- Payment options (hidden initially) -->
+                        <div id="payment-options" style="display: none;">
+                            <!-- Quick payment buttons will be added here dynamically -->
+                        </div>
+                        
+                        <!-- Amount input -->
+                        <div>
+                            <label class="form-label">Monto a pagar *</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                <input type="text" id="payment-amount" class="form-input pl-8" placeholder="Seleccione una deuda primero" disabled required>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">Puede pagar el total o hacer un abono parcial</p>
+                        </div>
+                        
+                        <div>
+                            <label class="form-label">Método de pago</label>
+                            <select id="payment-method" class="form-input">
+                                <option value="cash">Efectivo</option>
+                                <option value="card">Tarjeta</option>
+                                <option value="transfer">Transferencia</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+                        <p class="text-xs text-blue-700">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            El pago se registrará con la fecha y hora actual
+                        </p>
+                    </div>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button type="button" onclick="guardarPago()" class="flex-1 px-6 py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-all">
+                            <i class="fas fa-save mr-2"></i>
+                            Registrar pago
+                        </button>
+                        <button type="button" onclick="closeRegistrarPagoModal()" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para saldo a favor - CON FORMATO DE DINERO -->
+    <div id="saldo-favor-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Registrar Saldo a Favor</h3>
+                        <p class="text-sm text-gray-500 mt-1">Anticipos o pagos adelantados</p>
+                    </div>
+                    <button onclick="closeSaldoFavorModal()" class="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <form id="credit-form">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="form-label">Monto *</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                                <input type="text" id="credit-amount" class="form-input pl-8" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="form-label">Concepto</label>
+                            <input type="text" id="credit-concept" class="form-input" placeholder="Ej: Anticipo para tratamiento">
+                        </div>
+                    </div>
+                    
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+                        <p class="text-xs text-blue-700">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            El saldo a favor se registrará con la fecha y hora actual
+                        </p>
+                    </div>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button type="button" onclick="guardarSaldoFavor()" class="flex-1 px-6 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-all">
+                            <i class="fas fa-save mr-2"></i>
+                            Registrar saldo
+                        </button>
+                        <button type="button" onclick="closeSaldoFavorModal()" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">
+                            Cancelar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para agregar nota -->
+    <div id="add-note-modal" class="modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-900">Agregar Nota</h3>
+                        <p class="text-sm text-gray-500 mt-1">Nueva nota o recordatorio</p>
+                    </div>
+                    <button onclick="document.getElementById('add-note-modal').classList.remove('show')" class="w-10 h-10 rounded-xl hover:bg-gray-100 flex items-center justify-center text-gray-400">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="form-label">Tipo de nota</label>
+                        <select id="new-note-type" class="form-input">
+                            <option value="general">General</option>
+                            <option value="reminder">Recordatorio</option>
+                            <option value="important">Importante</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="form-label">Contenido *</label>
+                        <textarea id="new-note-content" class="form-input" rows="4" placeholder="Escriba la nota aquí..." required></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button type="button" onclick="saveNoteFromModal()" class="flex-1 px-6 py-3 bg-amber-600 text-white rounded-xl font-semibold hover:bg-amber-700 transition-all">
+                        <i class="fas fa-save mr-2"></i>
+                        Guardar nota
+                    </button>
+                    <button type="button" onclick="document.getElementById('add-note-modal').classList.remove('show')" class="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle text-emerald-400"></i>
+        <span id="toast-message">Cambios guardados</span>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="/static/js/patients.js"></script>
+    <script>
+        // Toggle sidebar for mobile
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+        
+        // Toggle contact fields
+        function toggleContactField(field) {
+            const checkbox = document.getElementById(`check-${field}`);
+            const fieldDiv = document.getElementById(`field-${field}`);
+            
+            if (checkbox.checked) {
+                fieldDiv.style.display = 'block';
+            } else {
+                fieldDiv.style.display = 'none';
+            }
+        }
+        
+        // Close dropdown menus when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.patient-options-btn') && !e.target.closest('.patient-options-dropdown')) {
+                document.querySelectorAll('.patient-options-dropdown').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+                document.querySelectorAll('.patient-options-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+            }
+        });
+        
+        // Initialize keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                document.getElementById('search-patients')?.focus();
+            }
+            
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.modal.show').forEach(modal => {
+                    modal.classList.remove('show');
+                });
+            }
+        });
+        
+        // Functions for delete patient modal
+        window.closeDeletePatientModal = function() {
+            document.getElementById('delete-patient-modal').classList.remove('show');
+        }
+    </script>
+</body>
+</html>

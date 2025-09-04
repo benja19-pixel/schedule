@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Agenda - MediConnect</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-feature-settings: 'cv11', 'ss01', 'ss03';
+        }
+        
+        body {
+            font-weight: 400;
+            letter-spacing: -0.011em;
+            line-height: 1.5;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+            letter-spacing: -0.022em;
+            line-height: 1.2;
+        }
+        
+        /* Smooth scroll */
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Gradient orbs */
+        .gradient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.15;
+            animation: float-slow 20s infinite ease-in-out;
+            pointer-events: none;
+        }
+        
+        @keyframes float-slow {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        
+        /* Sidebar glass */
+        .sidebar-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(229, 231, 235, 0.5);
+        }
+        
+        /* Nav link styles */
+        .nav-link {
+            position: relative;
+            transition: all 0.2s ease;
+            color: #6b7280;
+            font-weight: 500;
+            text-decoration: none;
+            display: block;
+            padding: 0.625rem 0;
+            margin: 0;
+        }
+        
+        .nav-link:hover {
+            color: #111827;
+        }
+        
+        .nav-link.active {
+            color: #ec4899;
+            font-weight: 600;
+        }
+        
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+            border-radius: 0 4px 4px 0;
+        }
+        
+        /* Status dot */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+        
+        /* View buttons */
+        .view-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .view-btn:hover {
+            background: #f9fafb;
+            color: #111827;
+        }
+        
+        .view-btn.active {
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+            color: white;
+            box-shadow: 0 2px 8px rgba(236, 72, 153, 0.25);
+        }
+        
+        /* Calendar container */
+        .calendar-main {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+            height: 600px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Time slot styles */
+        .time-slot {
+            height: 60px;
+            border-bottom: 1px solid #f3f4f6;
+            position: relative;
+        }
+        
+        .time-slot:hover {
+            background: rgba(236, 72, 153, 0.03);
+        }
+        
+        .time-slot.slot-available {
+            background: rgba(16, 185, 129, 0.05);
+            cursor: pointer;
+        }
+        
+        .time-slot.slot-available:hover {
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .time-label {
+            font-size: 12px;
+            color: #9ca3af;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        /* Appointment block styles */
+        .appointment-block {
+            position: absolute;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 10;
+        }
+        
+        .appointment-block:hover {
+            transform: translateX(2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 20;
+        }
+        
+        .appointment-purple {
+            background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+            border-left: 4px solid #9333ea;
+        }
+        
+        .appointment-blue {
+            background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+            border-left: 4px solid #0284c7;
+        }
+        
+        .appointment-green, .appointment-confirmed {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            border-left: 4px solid #16a34a;
+        }
+        
+        .appointment-amber, .appointment-regular {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .appointment-urgent {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-left: 4px solid #dc2626;
+        }
+        
+        .appointment-new {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border-left: 4px solid #0ea5e9;
+        }
+        
+        /* Week view specific */
+        .week-grid {
+            display: grid;
+            grid-template-columns: 60px repeat(7, 1fr);
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .week-header {
+            display: grid;
+            grid-template-columns: 60px repeat(7, 1fr);
+            border-bottom: 2px solid #e5e7eb;
+            background: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .week-day-header {
+            padding: 12px 8px;
+            text-align: center;
+            border-right: 1px solid #e5e7eb;
+        }
+        
+        .week-day-header.today {
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+        }
+        
+        .week-time-slot {
+            height: 50px;
+            border-bottom: 1px solid #f3f4f6;
+            border-right: 1px solid #f3f4f6;
+            position: relative;
+        }
+        
+        .week-appointment {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-size: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        .week-appointment:hover {
+            z-index: 20;
+            transform: scale(1.05);
+        }
+        
+        .time-column {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .day-column {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .day-number {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+            color: white;
+            font-weight: bold;
+        }
+        
+        /* Month view */
+        .month-day {
+            min-height: 80px;
+            border: 1px solid #e5e7eb;
+            padding: 6px;
+            background: white;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .month-day:hover {
+            background: #fdf2f8;
+            z-index: 10;
+            transform: scale(1.02);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .month-day.today {
+            background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+            border: 2px solid #ec4899;
+        }
+        
+        .month-day.other-month {
+            opacity: 0.3;
+            background: #f9fafb;
+        }
+        
+        .month-day-number {
+            font-weight: 600;
+            font-size: 13px;
+            color: #374151;
+        }
+        
+        .month-event {
+            font-size: 10px;
+            padding: 2px 4px;
+            margin-top: 2px;
+            border-radius: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        /* Day detail popup */
+        .day-detail-popup {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            padding: 12px;
+            z-index: 50;
+            min-width: 220px;
+            display: none;
+            margin-top: 4px;
+        }
+        
+        .month-day:hover .day-detail-popup {
+            display: block;
+        }
+        
+        /* Notification panel */
+        .notification-panel {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+            height: fit-content;
+        }
+        
+        /* Stats summary */
+        .stats-summary {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            padding: 20px;
+        }
+        
+        /* Upcoming appointments */
+        .upcoming-appointments {
+            margin-top: 20px;
+        }
+        
+        .cita-card {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            margin-bottom: 8px;
+        }
+        
+        .cita-card:hover {
+            background: #f3f4f6;
+            transform: translateX(4px);
+        }
+        
+        /* Dropdown menu */
+        .dropdown-menu {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 8px 0;
+            min-width: 150px;
+            z-index: 50;
+            display: none;
+        }
+        
+        .dropdown-menu.show {
+            display: block;
+        }
+        
+        .dropdown-item {
+            padding: 8px 16px;
+            font-size: 13px;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .dropdown-item:hover {
+            background: #f3f4f6;
+        }
+        
+        /* Modal styles */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .modal.show .modal-content {
+            transform: scale(1) translateY(0);
+        }
+        
+        /* Input field styles */
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+        }
+        
+        select.input-field {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+        
+        /* Label styles */
+        .label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #9ca3af;
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        /* Icon button */
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .icon-btn:hover {
+            border-color: #10b981;
+            color: #10b981;
+            background: #f0fdf4;
+            transform: scale(1.1);
+        }
+        
+        /* Loading spinner */
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #ec4899;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #111827;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 10000;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* User profile hover effect */
+        .user-profile-link {
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .sidebar-glass {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 40;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+            }
+            
+            .sidebar-glass.open {
+                transform: translateX(0);
+            }
+            
+            main {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+    <!-- Background decoration -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="gradient-orb w-96 h-96 bg-purple-400 -top-48 -right-48"></div>
+        <div class="gradient-orb w-80 h-80 bg-pink-400 -bottom-32 -left-32" style="animation-delay: -5s;"></div>
+        <div class="gradient-orb w-64 h-64 bg-emerald-400 top-1/2 left-1/3" style="animation-delay: -10s;"></div>
+    </div>
+    
+    <div class="flex h-screen relative">
+        <!-- Sidebar minimal -->
+        <aside class="w-64 sidebar-glass relative z-20" id="sidebar">
+            <div class="h-full flex flex-col">
+                <!-- Title aligned with menu items -->
+                <div class="px-6" style="padding-top: 50px; padding-bottom: 32px;">
+                    <h1 class="text-xl font-black text-gray-800">MediConnect</h1>
+                </div>
+                
+                <!-- Navigation minimal -->
+                <nav class="flex-1 space-y-1 px-6">
+                    <a href="/dashboard" class="nav-link">
+                        Dashboard
+                    </a>
+                    <a href="http://localhost:8000/miagenda" class="nav-link active">
+                        Mi agenda
+                    </a>
+                    <a href="/patients" class="nav-link">
+                        Pacientes
+                    </a>
+                    <a href="http://localhost:8000/configurar-horario" class="nav-link">
+                        Configurar Horario
+                    </a>
+                    <a href="/ai-tools" class="nav-link">
+                        Asistente medico IA
+                    </a>
+                    <a href="/soap-notes" class="nav-link">
+                        Notas SOAP
+                    </a>
+                    <a href="/virtual-secretary" class="nav-link">
+                        Secretaria Virtual
+                    </a>
+                </nav>
+                
+                <!-- User section -->
+                <div class="p-6 pt-0 mt-auto border-t border-gray-200">
+                    <a href="http://localhost:8000/account" class="user-profile-link flex items-center gap-3 px-3 py-3 mx-3 rounded-xl hover:bg-purple-50 transition-all cursor-pointer group border border-transparent hover:border-purple-200" title="Ir a mi cuenta">
+                        <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=40&h=40&fit=crop&crop=faces" 
+                             alt="Doctor" 
+                             class="w-10 h-10 rounded-full ring-2 ring-gray-200 group-hover:ring-purple-300 transition-all">
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-gray-900 group-hover:text-purple-600 transition-colors" id="doctor-name">Dr. García</p>
+                            <div class="flex items-center gap-2">
+                                <span class="status-dot"></span>
+                                <span class="text-xs text-gray-500 group-hover:text-purple-600 transition-colors" id="user-status">Mi cuenta</span>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-purple-600 transition-all"></i>
+                    </a>
+                    
+                    <!-- Upgrade CTA for free users -->
+                    <div class="mx-4 mb-4 hidden" id="upgrade-cta">
+                        <div class="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 border border-purple-200">
+                            <p class="text-sm font-semibold text-purple-900 mb-2">
+                                Mejora tu plan
+                            </p>
+                            <p class="text-xs text-purple-700 mb-3">
+                                Desbloquea todas las funciones
+                            </p>
+                            <a href="/pricing" class="block text-center bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all">
+                                Ver planes
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Mobile menu toggle -->
+        <button class="md:hidden fixed bottom-4 right-4 z-30 bg-gradient-to-br from-purple-600 to-pink-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <!-- Main content -->
+        <main class="flex-1 overflow-auto bg-gray-50 p-6">
+            <!-- Header with title and buttons -->
+            <div class="flex items-center justify-between mb-6">
+                <h1 class="text-2xl font-bold text-gray-900">MI AGENDA</h1>
+                
+                <div class="flex items-center gap-3">
+                    <!-- Nueva Cita button -->
+                    <button onclick="openNewAppointmentModal()" class="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-semibold text-sm hover:shadow-lg transition-all flex items-center gap-2">
+                        <span>Nueva Cita</span>
+                        <i class="fas fa-plus"></i>
+                    </button>
+                    
+                    <!-- Cierre de emergencia button -->
+                    <button onclick="openEmergencyModal()" class="px-6 py-2.5 bg-red-500 text-white rounded-lg font-semibold text-sm hover:bg-red-600 transition-all">
+                        Cierre de emergencia
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Main layout with calendar and notification panel -->
+            <div class="flex gap-6">
+                <!-- Calendar section (main area) -->
+                <div class="flex-1">
+                    <!-- View toggle and calendar header -->
+                    <div class="bg-white rounded-t-xl px-6 py-4 flex items-center justify-between">
+                        <div class="flex items-center gap-4">
+                            <!-- View toggle -->
+                            <div class="flex items-center bg-gray-100 rounded-lg p-1">
+                                <button class="view-btn active" onclick="switchView('day', this)">
+                                    Día
+                                </button>
+                                <button class="view-btn" onclick="switchView('week', this)">
+                                    Semana
+                                </button>
+                                <button class="view-btn" onclick="switchView('month', this)">
+                                    Mes
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Date navigation -->
+                        <div class="flex items-center gap-3">
+                            <!-- Date display -->
+                            <span class="text-sm font-semibold text-gray-600" id="current-date-display"></span>
+                            
+                            <!-- Year selector -->
+                            <span class="text-sm font-semibold text-gray-600" id="year-selector">2025</span>
+                            
+                            <button onclick="previousPeriod()" class="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-600">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button onclick="goToToday()" class="px-4 py-1.5 text-sm font-semibold text-gray-700 hover:bg-gray-100 rounded-lg transition-all" id="today-button">
+                                Hoy
+                            </button>
+                            <button onclick="nextPeriod()" class="w-8 h-8 rounded-lg hover:bg-gray-100 flex items-center justify-center text-gray-600">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Calendar container -->
+                    <div class="calendar-main rounded-b-xl" id="calendar-container">
+                        <!-- Day View -->
+                        <div id="day-view" class="h-full overflow-y-auto">
+                            <div>
+                                <!-- Time slots will be generated by JavaScript -->
+                            </div>
+                        </div>
+                        
+                        <!-- Week View -->
+                        <div id="week-view" class="h-full hidden overflow-y-auto">
+                            <!-- Week grid will be generated by JavaScript -->
+                        </div>
+                        
+                        <!-- Month View -->
+                        <div id="month-view" class="h-full hidden overflow-y-auto">
+                            <!-- Month calendar grid -->
+                            <div class="grid grid-cols-7 gap-1 text-xs">
+                                <!-- Month grid will be generated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right side: Notification panel and summary -->
+                <div class="w-80 space-y-4">
+                    <!-- Notification panel -->
+                    <div class="notification-panel">
+                        <h3 class="text-sm font-bold text-gray-900 mb-4">Notificaciones</h3>
+                        
+                        <div class="space-y-3 notifications-container">
+                            <!-- Notifications will be loaded dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- Summary section -->
+                    <div class="stats-summary">
+                        <!-- Stats will be loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Próximas citas section -->
+            <div class="bg-white rounded-xl shadow-lg p-5 mt-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">
+                    Próximas citas
+                </h3>
+                <div class="space-y-3 upcoming-appointments">
+                    <!-- Upcoming appointments will be loaded dynamically -->
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Load scripts in correct order -->
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/notifications.js"></script>
+    <script src="/static/js/miagenda.js"></script>
+    
+    <script>
+    // Load user data when page loads
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                const response = await fetch('/api/auth/me', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const userData = await response.json();
+                    const userName = userData.full_name || userData.email.split('@')[0];
+                    document.getElementById('doctor-name').textContent = `Dr. ${userName}`;
+                    
+                    const upgradeCTA = document.getElementById('upgrade-cta');
+                    if (userData.plan_type === 'free') {
+                        upgradeCTA.classList.remove('hidden');
+                    } else {
+                        upgradeCTA.classList.add('hidden');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Error loading user data:', error);
+        }
+    });
+    </script>
+</body>
+</html>

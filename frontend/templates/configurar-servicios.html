@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configurar Servicios - MediConnect</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Inter Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-feature-settings: 'cv11', 'ss01', 'ss03';
+        }
+        
+        body {
+            font-weight: 400;
+            letter-spacing: -0.011em;
+            line-height: 1.5;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 700;
+            letter-spacing: -0.022em;
+            line-height: 1.2;
+        }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        /* Gradient orbs */
+        .gradient-orb {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.2;
+            animation: float-slow 20s infinite ease-in-out;
+            pointer-events: none;
+        }
+        
+        @keyframes float-slow {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+        
+        /* Sidebar glass effect */
+        .sidebar-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(229, 231, 235, 0.5);
+        }
+        
+        /* Nav link styles */
+        .nav-link {
+            position: relative;
+            transition: all 0.2s ease;
+            color: #6b7280;
+            font-weight: 500;
+            text-decoration: none;
+            display: block;
+            padding: 0.625rem 0;
+            margin: 0;
+        }
+        
+        .nav-link:hover {
+            color: #111827;
+        }
+        
+        .nav-link.active {
+            color: #ec4899;
+            font-weight: 600;
+        }
+        
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: -24px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+            border-radius: 0 4px 4px 0;
+        }
+        
+        /* Servicio card styles */
+        .servicio-card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 16px;
+        }
+        
+        .servicio-card:hover {
+            border-color: #d8b4fe;
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(147, 51, 234, 0.08), 0 10px 10px -5px rgba(147, 51, 234, 0.04);
+        }
+        
+        .servicio-header {
+            margin-bottom: 16px;
+        }
+        
+        .servicio-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 8px;
+        }
+        
+        .servicio-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-top: 8px;
+        }
+        
+        .meta-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .meta-item i {
+            font-size: 12px;
+        }
+        
+        .servicio-description {
+            color: #4b5563;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 16px;
+            background: #f9fafb;
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .servicio-ai-instructions {
+            padding: 12px;
+            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+            border: 1px solid rgba(147, 51, 234, 0.2);
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .servicio-patient-instructions {
+            padding: 12px;
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+        }
+        
+        /* Stats card */
+        .stats-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .stats-value {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        
+        /* Settings card */
+        .settings-card {
+            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid rgba(147, 51, 234, 0.1);
+            box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.05);
+        }
+        
+        /* Add button */
+        .add-servicio-btn {
+            width: 100%;
+            padding: 32px;
+            border: 3px dashed #d8b4fe;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+            color: #7c3aed;
+            font-weight: 700;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .add-servicio-btn:hover {
+            border-color: #9333ea;
+            background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(147, 51, 234, 0.15);
+        }
+        
+        .add-servicio-btn i {
+            font-size: 32px;
+            color: #9333ea;
+        }
+        
+        /* Input styles */
+        .input-field {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            border-color: #9333ea;
+            box-shadow: 0 0 0 3px rgba(147, 51, 234, 0.1);
+        }
+        
+        textarea.input-field {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        select.input-field {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 40px;
+            cursor: pointer;
+        }
+        
+        /* Icon button */
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .icon-btn:hover {
+            border-color: #9333ea;
+            color: #9333ea;
+            background: #faf5ff;
+            transform: scale(1.1);
+        }
+        
+        .icon-btn.delete-btn {
+            border-color: #fee2e2;
+            color: #ef4444;
+        }
+        
+        .icon-btn.delete-btn:hover {
+            border-color: #ef4444;
+            background: #fee2e2;
+        }
+        
+        /* Modal styles */
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 720px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        }
+        
+        .modal.show .modal-content {
+            transform: scale(1) translateY(0);
+        }
+        
+        /* Label styles */
+        .label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #9ca3af;
+            margin-bottom: 8px;
+        }
+        
+        /* Toast notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #111827;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 100;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        /* Loading overlay */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+        
+        #loading-overlay.hidden {
+            display: none !important;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #9333ea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Status dot */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            .sidebar-glass {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 40;
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+            }
+            
+            .sidebar-glass.open {
+                transform: translateX(0);
+            }
+            
+            main {
+                margin-left: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-white text-gray-900">
+    <!-- Background decoration -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div class="gradient-orb w-96 h-96 bg-purple-400 -top-48 -right-48"></div>
+        <div class="gradient-orb w-80 h-80 bg-pink-400 -bottom-32 -left-32" style="animation-delay: -5s;"></div>
+        <div class="gradient-orb w-64 h-64 bg-indigo-400 top-1/2 left-1/3" style="animation-delay: -10s;"></div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="hidden">
+        <div class="loading-spinner"></div>
+    </div>
+    
+    <div class="flex h-screen relative">
+        <!-- Sidebar -->
+        <aside class="w-64 sidebar-glass relative z-20" id="sidebar">
+            <div class="h-full flex flex-col">
+                <!-- Title -->
+                <div class="px-6" style="padding-top: 50px; padding-bottom: 32px;">
+                    <h1 class="text-xl font-black text-gray-800">MediConnect</h1>
+                </div>
+                
+                <!-- Navigation -->
+                <nav class="flex-1 space-y-1 px-6">
+                    <a href="/dashboard" class="nav-link">Dashboard</a>
+                    <a href="/miagenda" class="nav-link">Mi agenda</a>
+                    <a href="/patients" class="nav-link">Pacientes</a>
+                    <a href="/configurar-horario" class="nav-link">Configurar Horario</a>
+                    <a href="/configurar-servicios" class="nav-link active">Configurar Servicios</a>
+                    <a href="/ai-tools" class="nav-link">Asistente medico IA</a>
+                    <a href="/soap-notes" class="nav-link">Notas SOAP</a>
+                    <a href="/virtual-secretary" class="nav-link">Secretaria Virtual</a>
+                </nav>
+                
+                <!-- User section -->
+                <div class="p-6 pt-0 mt-auto border-t border-gray-200">
+                    <a href="/account" class="user-profile-link flex items-center gap-3 px-3 py-3 mx-3 rounded-xl hover:bg-purple-50 transition-all cursor-pointer group border border-transparent hover:border-purple-200">
+                        <img src="https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=40&h=40&fit=crop&crop=faces" 
+                             alt="Doctor" 
+                             class="w-10 h-10 rounded-full ring-2 ring-gray-200 group-hover:ring-purple-300 transition-all">
+                        <div class="flex-1">
+                            <p class="text-sm font-semibold text-gray-900 group-hover:text-purple-600 transition-colors" id="doctor-name">Dr. García</p>
+                            <div class="flex items-center gap-2">
+                                <span class="status-dot"></span>
+                                <span class="text-xs text-gray-500 group-hover:text-purple-600 transition-colors">Mi cuenta</span>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-gray-400 text-sm group-hover:text-purple-600 transition-all"></i>
+                    </a>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- Mobile menu toggle -->
+        <button class="md:hidden fixed bottom-4 right-4 z-30 bg-gradient-to-br from-purple-500 to-pink-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <!-- Main content -->
+        <main class="flex-1 overflow-y-auto bg-gray-50">
+            <div class="max-w-7xl mx-auto px-8 py-12">
+                <!-- Header -->
+                <header class="mb-10">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                                Configurar Servicios Médicos
+                            </h1>
+                            <p class="text-lg text-gray-600">
+                                Define los tipos de consulta que ofreces y sus características
+                            </p>
+                        </div>
+                    </div>
+                </header>
+                
+                <!-- Main Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Services List (2 columns) -->
+                    <div class="lg:col-span-2">
+                        <div class="mb-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-xl font-bold text-gray-900">Mis Servicios</h2>
+                                <span class="text-sm text-gray-500" id="service-count">0 servicios configurados</span>
+                            </div>
+                            
+                            <!-- Services Container -->
+                            <div id="servicios-container">
+                                <!-- Services will be loaded here dynamically -->
+                            </div>
+                            
+                            <!-- Add Service Button -->
+                            <button class="add-servicio-btn" onclick="addServicio()">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>Agregar Nuevo Servicio</span>
+                                <span class="text-sm font-normal opacity-70">Define un nuevo tipo de consulta</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Stats Sidebar (1 column) -->
+                    <div class="space-y-6">
+                        <!-- Services Counter Card -->
+                        <div class="stats-card">
+                            <label class="label">
+                                <i class="fas fa-clipboard-list text-purple-500 mr-1"></i>
+                                Servicios Activos
+                            </label>
+                            <div class="mt-4">
+                                <div class="text-center">
+                                    <span class="stats-value text-3xl" data-stat="services">0</span>
+                                    <p class="text-sm text-gray-600 mt-2">servicios configurados</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Price Breakdown Card -->
+                        <div class="stats-card">
+                            <label class="label">
+                                <i class="fas fa-dollar-sign text-emerald-500 mr-1"></i>
+                                Distribución de Precios
+                            </label>
+                            <div class="mt-4" id="price-breakdown">
+                                <div class="text-center text-gray-500 text-sm">
+                                    <i class="fas fa-chart-pie text-3xl mb-2 opacity-30"></i>
+                                    <p>Sin datos aún</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tips Card -->
+                        <div class="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6 border border-purple-200">
+                            <h3 class="font-bold text-purple-900 mb-3 flex items-center gap-2">
+                                <i class="fas fa-lightbulb text-purple-600"></i>
+                                Tips para tus servicios
+                            </h3>
+                            <ul class="space-y-2 text-sm text-purple-700">
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-check-circle text-purple-500 mt-0.5"></i>
+                                    <span>Crea descripciones claras y detalladas para cada servicio</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-check-circle text-purple-500 mt-0.5"></i>
+                                    <span>Las instrucciones para IA ayudarán a tu secretaria virtual a agendar mejor</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-check-circle text-purple-500 mt-0.5"></i>
+                                    <span>Considera ofrecer consultas de diferentes duraciones</span>
+                                </li>
+                                <li class="flex items-start gap-2">
+                                    <i class="fas fa-check-circle text-purple-500 mt-0.5"></i>
+                                    <span>Los servicios gratuitos pueden ser útiles para seguimientos rápidos</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Service Modal -->
+    <div id="servicio-modal" class="modal">
+        <div class="modal-content">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold text-gray-900">Nuevo Servicio Médico</h3>
+                <button onclick="closeModal()" class="icon-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-6">
+                <!-- Basic Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="label">
+                            <i class="fas fa-tag text-purple-500 mr-1"></i>
+                            Nombre del Servicio *
+                        </label>
+                        <input type="text" name="nombre" class="input-field" placeholder="Ej: Consulta inicial, Seguimiento, Control...">
+                    </div>
+                    
+                    <div>
+                        <label class="label">
+                            <i class="fas fa-clock text-purple-500 mr-1"></i>
+                            Duración *
+                        </label>
+                        <select name="duracion_minutos" class="input-field">
+                            <option value="15">15 minutos</option>
+                            <option value="30" selected>30 minutos</option>
+                            <option value="45">45 minutos</option>
+                            <option value="60">1 hora</option>
+                            <option value="90">1.5 horas</option>
+                            <option value="120">2 horas</option>
+                            <option value="150">2.5 horas</option>
+                            <option value="180">3 horas</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Description -->
+                <div>
+                    <label class="label">
+                        <i class="fas fa-align-left text-purple-500 mr-1"></i>
+                        Descripción del Servicio * (mínimo 10 caracteres)
+                    </label>
+                    <textarea name="descripcion" class="input-field" rows="3" 
+                              placeholder="Describe detalladamente en qué consiste este servicio. Ej: Evaluación completa del paciente incluyendo historia clínica, exploración física y diagnóstico inicial..."></textarea>
+                </div>
+                
+                <!-- Quantity and Price -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="label">
+                            <i class="fas fa-calendar-check text-purple-500 mr-1"></i>
+                            Cantidad de Consultas
+                        </label>
+                        <select name="cantidad_consultas" class="input-field">
+                            <option value="1" selected>1 consulta</option>
+                            <option value="2">2 consultas</option>
+                            <option value="3">3 consultas</option>
+                            <option value="4">4 consultas</option>
+                            <option value="5">5 consultas</option>
+                            <option value="6">6 consultas</option>
+                            <option value="8">8 consultas</option>
+                            <option value="10">10 consultas</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="label">
+                            <i class="fas fa-dollar-sign text-purple-500 mr-1"></i>
+                            Tipo de Precio
+                        </label>
+                        <select name="tipo_precio" class="input-field" onchange="updatePriceFields()">
+                            <option value="precio_fijo">Precio fijo</option>
+                            <option value="precio_por_evaluar">A evaluar por el doctor</option>
+                            <option value="precio_variable">Precio variable (rango)</option>
+                            <option value="gratis">Gratuito</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Price Fields -->
+                <div id="precio-fijo-field">
+                    <label class="label">
+                        <i class="fas fa-money-bill text-purple-500 mr-1"></i>
+                        Precio (MXN)
+                    </label>
+                    <input type="number" name="precio" class="input-field" placeholder="0.00" step="0.01" min="0">
+                </div>
+                
+                <div id="precio-variable-fields" class="hidden">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="label">Precio Mínimo (MXN)</label>
+                            <input type="number" name="precio_minimo" class="input-field" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                        <div>
+                            <label class="label">Precio Máximo (MXN)</label>
+                            <input type="number" name="precio_maximo" class="input-field" placeholder="0.00" step="0.01" min="0">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- AI Instructions -->
+                <div>
+                    <label class="label">
+                        <i class="fas fa-robot text-purple-500 mr-1"></i>
+                        Instrucciones para IA Secretaria (Opcional)
+                    </label>
+                    <textarea name="instrucciones_ia" class="input-field" rows="3" 
+                              placeholder="Ej: Agendar cuando el paciente mencione síntomas de dolor crónico, cuando sea su primera vez, cuando requiera evaluación inicial, etc. Sé muy específico."></textarea>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Estas instrucciones ayudarán a la IA a decidir cuándo recomendar este servicio
+                    </p>
+                </div>
+                
+                <!-- Patient Instructions -->
+                <div>
+                    <label class="label">
+                        <i class="fas fa-user text-purple-500 mr-1"></i>
+                        Instrucciones para el Paciente (Opcional)
+                    </label>
+                    <textarea name="instrucciones_paciente" class="input-field" rows="2" 
+                              placeholder="Ej: Traer estudios previos, ayuno de 8 horas, venir acompañado, etc."></textarea>
+                </div>
+                
+                <!-- Preparation -->
+                <div>
+                    <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" name="requiere_preparacion" class="w-4 h-4 text-purple-600">
+                        <span class="text-sm font-medium text-gray-700">Requiere tiempo de preparación</span>
+                    </label>
+                    
+                    <div id="prep-time-field" class="hidden mt-3">
+                        <label class="label">Tiempo de preparación (minutos)</label>
+                        <input type="number" name="tiempo_preparacion" class="input-field" placeholder="0" min="0" max="60">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Modal Actions -->
+            <div class="flex gap-3 mt-8">
+                <button class="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-xl font-semibold hover:shadow-lg transition-all" onclick="saveServicio()">
+                    <i class="fas fa-save mr-2"></i>
+                    Guardar Servicio
+                </button>
+                <button class="flex-1 px-6 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition-all" onclick="closeModal()">
+                    Cancelar
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle text-emerald-400"></i>
+        <span id="toast-message">Cambios guardados</span>
+    </div>
+    
+    <!-- Load scripts -->
+    <script src="/static/js/app.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/notifications.js"></script>
+    <script src="/static/js/servicios.js"></script>
+</body>
+</html>

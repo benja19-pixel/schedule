@@ -1,0 +1,94 @@
+# ==========================================
+# MediConnect - Dependencias Python
+# ==========================================
+# Solo las dependencias necesarias para las páginas funcionales
+
+# === Core Framework ===
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.10.5
+pydantic-settings==2.7.0
+python-dotenv==1.0.1
+
+# === Templates & Static Files ===
+jinja2==3.1.5
+aiofiles==24.1.0
+
+# === Database ===
+sqlalchemy==2.0.35
+psycopg2-binary==2.9.10
+alembic==1.14.0
+
+# === Authentication & Security ===
+# Mantenemos estas librerías aunque no se usen para no romper imports
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.2.1
+python-multipart==0.0.12
+
+# === Google Services (Opcional) ===
+# Para Calendar Sync y Maps en consultorios
+google-auth==2.25.2
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.111.0
+googleapis-common-protos==1.62.0
+
+# === Redis (Opcional - para caché) ===
+redis==5.2.1
+hiredis==2.3.2
+
+# === Stripe (Mantenemos por referencias en el código) ===
+stripe==11.4.0
+
+# === Email ===
+resend==2.5.1  # AGREGADO - necesario para algunos imports
+email-validator==2.2.0
+sendgrid==6.11.0  # Opcional pero puede estar referenciado
+
+# === HTTP Client ===
+httpx==0.28.1
+requests==2.31.0
+urllib3==1.26.18
+aiohttp==3.9.5  # AGREGADO - necesario para geocoding_service
+
+# === Calendar & Date utilities ===
+python-dateutil==2.9.0
+pytz==2024.1
+icalendar==5.0.11
+recurring-ical-events==2.1.2
+dateparser==1.2.0
+
+# === CORS ===
+fastapi-cors==0.0.6
+
+# === Monitoring (Opcional) ===
+# sentry-sdk[fastapi]==1.39.1  # Comentado - no necesario en dev
+
+# === Additional utilities ===
+httplib2==0.22.0
+protobuf==4.25.1
+cachetools==5.3.2
+pyasn1-modules==0.3.0
+rsa==4.9
+oauthlib==3.2.2
+cryptography==41.0.7
+
+# === Apple Calendar (Opcional) ===
+# nylas==6.11.1  # Comentado - solo si se necesita Apple Calendar
+
+# === AI Services (Opcional) ===
+# openai==1.57.2  # Comentado - solo si se necesita IA
+
+# === SMS (Opcional) ===
+# twilio==8.10.3  # Comentado - no necesario en dev
+
+# === Development Tools (Recomendado) ===
+# Descomenta estas si quieres herramientas de desarrollo
+# black==24.10.0
+# flake8==7.1.1
+# mypy==1.7.1
+# ipython==8.18.1
+# pytest==8.3.4
+# pytest-asyncio==0.25.2
+# faker==24.3.0

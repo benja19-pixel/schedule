@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - MediConnect Development</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- IMPORTANTE: Mock Auth debe cargarse primero -->
+    <script src="/static/js/mock-auth.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .page-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .page-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <div class="gradient-bg text-white p-8 shadow-lg">
+        <div class="max-w-7xl mx-auto">
+            <h1 class="text-3xl font-bold mb-2">MediConnect - Entorno de Desarrollo</h1>
+            <p class="text-purple-100">Sistema de Gestión Médica</p>
+            
+            <div class="mt-6 bg-white/10 backdrop-blur rounded-lg p-4">
+                <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user-md text-2xl"></i>
+                    </div>
+                    <div>
+                        <p class="font-semibold">Usuario Simulado</p>
+                        <p class="text-sm text-purple-100">Dr. Demo (demo@mediconnect.com)</p>
+                    </div>
+                    <div class="ml-auto">
+                        <span class="px-3 py-1 bg-green-500 text-white text-sm rounded-full">
+                            <i class="fas fa-check-circle mr-1"></i>
+                            Autenticado
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto p-8">
+        <h2 class="text-2xl font-bold text-gray-800 mb-6">Páginas Disponibles</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Pacientes -->
+            <a href="/patients" class="page-card bg-white rounded-xl p-6 shadow-md border-2 border-transparent hover:border-purple-500">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-users text-purple-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 ml-3">Pacientes</h3>
+                </div>
+                <p class="text-gray-600 text-sm">Gestión completa de expedientes clínicos, pagos y deudas.</p>
+                <div class="mt-4 flex items-center text-purple-600 text-sm font-medium">
+                    <span>Abrir</span>
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </div>
+            </a>
+            
+            <!-- Mi Agenda -->
+            <a href="/miagenda" class="page-card bg-white rounded-xl p-6 shadow-md border-2 border-transparent hover:border-blue-500">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-calendar-alt text-blue-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 ml-3">Mi Agenda</h3>
+                </div>
+                <p class="text-gray-600 text-sm">Calendario de citas con vistas día, semana y mes.</p>
+                <div class="mt-4 flex items-center text-blue-600 text-sm font-medium">
+                    <span>Abrir</span>
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </div>
+            </a>
+            
+            <!-- Configurar Horario -->
+            <a href="/configurar-horario" class="page-card bg-white rounded-xl p-6 shadow-md border-2 border-transparent hover:border-green-500">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-clock text-green-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 ml-3">Configurar Horario</h3>
+                </div>
+                <p class="text-gray-600 text-sm">Define horarios de trabajo y días especiales.</p>
+                <div class="mt-4 flex items-center text-green-600 text-sm font-medium">
+                    <span>Abrir</span>
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </div>
+            </a>
+            
+            <!-- Configurar Servicios -->
+            <a href="/configurar-servicios" class="page-card bg-white rounded-xl p-6 shadow-md border-2 border-transparent hover:border-amber-500">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-clipboard-list text-amber-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 ml-3">Servicios Médicos</h3>
+                </div>
+                <p class="text-gray-600 text-sm">Configura tipos de consulta, duración y precios.</p>
+                <div class="mt-4 flex items-center text-amber-600 text-sm font-medium">
+                    <span>Abrir</span>
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </div>
+            </a>
+            
+            <!-- Mis Consultorios -->
+            <a href="/mis-consultorios" class="page-card bg-white rounded-xl p-6 shadow-md border-2 border-transparent hover:border-indigo-500">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-hospital text-indigo-600 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-gray-800 ml-3">Mis Consultorios</h3>
+                </div>
+                <p class="text-gray-600 text-sm">Gestiona ubicaciones y sedes de atención.</p>
+                <div class="mt-4 flex items-center text-indigo-600 text-sm font-medium">
+                    <span>Abrir</span>
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </div>
+            </a>
+            
+            <!-- API Info -->
+            <a href="/api/dev-info" target="_blank" class="page-card bg-gray-800 text-white rounded-xl p-6 shadow-md border-2 border-transparent hover:border-gray-600">
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-code text-gray-300 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold ml-3">Dev Info</h3>
+                </div>
+                <p class="text-gray-300 text-sm">Información técnica y endpoints de API.</p>
+                <div class="mt-4 flex items-center text-gray-400 text-sm font-medium">
+                    <span>Ver JSON</span>
+                    <i class="fas fa-external-link-alt ml-2"></i>
+                </div>
+            </a>
+        </div>
+        
+        <!-- Info Box -->
+        <div class="mt-8 bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-yellow-600 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Información Importante</h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Este es un entorno de desarrollo con autenticación simulada</li>
+                            <li>Todos los datos son de prueba y pueden ser eliminados</li>
+                            <li>Las integraciones externas (Google Calendar, Maps) requieren configuración adicional</li>
+                            <li>La base de datos es PostgreSQL local (mediconnect_dev)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Health Status -->
+        <div class="mt-6 text-center">
+            <a href="/health" target="_blank" class="inline-flex items-center text-sm text-gray-500 hover:text-gray-700">
+                <i class="fas fa-heartbeat mr-2"></i>
+                Ver estado del sistema
+            </a>
+        </div>
+    </div>
+    
+    <script>
+        // Verificar que el mock auth está funcionando
+        console.log('Dashboard cargado');
+        console.log('Token:', localStorage.getItem('access_token'));
+        console.log('Usuario:', localStorage.getItem('user_data'));
+    </script>
+</body>
+</html>
